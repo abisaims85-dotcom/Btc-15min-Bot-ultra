@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080c12">
+<title>₿ BTC 15-Min ULTRA V2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080c12;color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:auto;padding:14px}.card{background:#111822;border:1px solid #273343;border-radius:20px;padding:16px;margin:10px 0;box-shadow:0 8px 30px #0005}
+.top{display:flex;justify-content:space-between;gap:10px}.sub,.label,.small{color:#8e9bab}.sub{font-size:13px}h1{font-size:25px;margin:0 0 4px}.live{font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#777;margin-right:5px}
+#price{font-size:34px;font-weight:900;margin-top:9px}.signal{font-size:48px;font-weight:950;text-align:center;padding:18px 4px;border-radius:20px;margin-top:12px}.wait{background:#3a3110;color:#ffd64d}.up{background:#0d3924;color:#4de58a}.down{background:#431722;color:#ff7184}
+#count{text-align:center;font-size:31px;font-weight:900;margin-top:2px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#0b1119;border-radius:13px;padding:12px;min-height:67px}.label{font-size:12px}.value{font-size:17px;font-weight:800;margin-top:4px}.small{font-size:12px;line-height:1.45}
+.bar{height:11px;background:#202a38;border-radius:99px;overflow:hidden;margin-top:7px}.fill{height:100%;width:0;transition:.25s}
+.score{text-align:center;font-size:22px;font-weight:900;margin-top:10px}button{width:100%;border:0;border-radius:13px;padding:14px;font-weight:900;font-size:15px;background:#eef2f6;color:#080c12}
+.good{color:#55e18b}.warn{color:#ffd64d}.bad{color:#ff7184}
+</style>
+</head>
+<body><div class="wrap">
+<div class="card">
+<div class="top"><div><h1>₿ BTC 15-Min ULTRA V2</h1><div class="sub">Motor de señales multicondición · BTC/USDT</div></div><div class="live"><span id="dot" class="dot"></span><span id="conn">Conectando…</span></div></div>
+<div id="price">—</div><div id="signal" class="signal wait">🟡 ESPERAR</div>
+<div class="label" style="text-align:center;margin-top:12px">TIEMPO RESTANTE</div><div id="count">--:--</div>
+</div>
+
+<div class="card"><div class="grid">
+<div class="metric"><div class="label">APERTURA</div><div id="open" class="value">—</div></div>
+<div class="metric"><div class="label">ESTIMACIÓN DE CIERRE</div><div id="est" class="value">—</div></div>
+<div class="metric"><div class="label">MÁXIMO</div><div id="high" class="value">—</div></div>
+<div class="metric"><div class="label">MÍNIMO</div><div id="low" class="value">—</div></div>
+<div class="metric"><div class="label">MOVIMIENTO ESTIMADO</div><div id="move" class="value">—</div></div>
+<div class="metric"><div class="label">RANGO ACTUAL</div><div id="range" class="value">—</div></div>
+</div></div>
+
+<div class="card"><div class="grid">
+<div class="metric"><div class="label">EMA 9</div><div id="ema9" class="value">—</div></div>
+<div class="metric"><div class="label">EMA 21</div><div id="ema21" class="value">—</div></div>
+<div class="metric"><div class="label">RSI 14</div><div id="rsi" class="value">—</div></div>
+<div class="metric"><div class="label">VWAP</div><div id="vwap" class="value">—</div></div>
+<div class="metric"><div class="label">MOMENTUM 3</div><div id="mom" class="value">—</div></div>
+<div class="metric"><div class="label">VOLUMEN</div><div id="vol" class="value">—</div></div>
+</div>
+<div class="label" style="margin-top:13px">FUERZA DE SEÑAL</div><div class="bar"><div id="strength" class="fill"></div></div>
+<div id="score" class="score">—</div><div id="reason" class="small" style="margin-top:7px">Esperando datos…</div>
+</div>
+
+<div class="card"><div class="grid">
+<div class="metric"><div class="label">SEÑAL ACTUAL</div><div id="last" class="value">—</div></div>
+<div class="metric"><div class="label">CAMBIO DE SEÑAL</div><div id="change" class="value">—</div></div>
+<div class="metric"><div class="label">ACIERTO HISTÓRICO</div><div id="wins" class="value">0 / 0</div></div>
+<div class="metric"><div class="label">PRECISIÓN</div><div id="acc" class="value">—</div></div>
+</div></div>
+
+<button id="refresh">🔄 ACTUALIZAR AHORA</button>
+<div id="status" class="small" style="text-align:center;margin-top:11px">Conectando…</div>
+<div class="small" style="margin-top:13px">⚠️ V2 es un sistema experimental de estimación. No puede conocer con certeza el cierre futuro. No realiza apuestas ni órdenes automáticamente.</div>
+</div>
+
+<script>
+const SOURCES=[
+{name:'Binance US',api:'https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=200',ws:'wss://stream.binance.us:9443/ws/btcusdt@kline_15m'},
+{name:'Binance',api:'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=200',ws:'wss://stream.binance.com:9443/ws/btcusdt@kline_15m'}
+];
+let c=[],ws=null,active='',lastClosed=0,lastPrediction=null,wins=0,total=0;
+
+const $=x=>document.getElementById(x), fmt=x=>Number(x).toLocaleString('en-US',{maximumFractionDigits:2});
+function EMA(a,p){let k=2/(p+1),e=a[0];for(let i=1;i<a.length;i++)e=a[i]*k+e*(1-k);return e}
+function RSI(a,p=14){if(a.length<=p)return 50;let g=0,l=0;for(let i=a.length-p;i<a.length;i++){let d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}return l===0?100:100-100/(1+l?g/l:0)}
+function VWAP(a){let pv=0,v=0;for(const x of a){let tp=(x.h+x.l+x.c)/3;pv+=tp*x.v;v+=x.v}return v?pv/v:a.at(-1).c}
+function ATR(a,p=14){if(a.length<2)return 0;let s=0,n=Math.min(p,a.length-1);for(let i=a.length-n;i<a.length;i++)s+=Math.max(a[i].h-a[i].l,Math.abs(a[i].h-a[i-1].c),Math.abs(a[i].l-a[i-1].c));return s/n}
+function regression(a,n=20){let z=a.slice(-n),N=z.length,sx=0,sy=0,sxx=0,sxy=0;for(let i=0;i<N;i++){sx+=i;sy+=z[i].c;sxx+=i*i;sxy+=i*z[i].c}let b=(N*sxy-sx*sy)/(N*sxx-sx*sx||1),aa=(sy-b*sx)/N;return aa+b*(N+2)}
+function avgVol(a,n=20){let z=a.slice(-n);return z.reduce((s,x)=>s+x.v,0)/z.length}
+function analyze(a){
+ let close=a.map(x=>x.c),cur=a.at(-1),e9=EMA(close.slice(-80),9),e21=EMA(close.slice(-100),21),r=RSI(close),v=VWAP(a.slice(-60)),atr=ATR(a),f=regression(a,20),av=avgVol(a),volRatio=av?cur.v/av:1;
+ let score=0,max=10,why=[];
+ if(e9>e21){score+=2;why.push('EMA9>EMA21')}else{score-=2;why.push('EMA9<EMA21')}
+ if(cur.c>v){score+=2;why.push('sobre VWAP')}else{score-=2;why.push('bajo VWAP')}
+ if(r>55&&r<75){score+=1;why.push('RSI alcista')}else if(r<45&&r>25){score-=1;why.push('RSI bajista')}else why.push('RSI neutral/extremo')
+ let mom=(close.at(-1)/close[Math.max(0,close.length-4)]-1)*100;
+ if(mom>.10){score++;why.push('momentum+')}else if(mom<-.10){score--;why.push('momentum-')}
+ if(volRatio>1.15){if(cur.c>cur.o){score++;why.push('volumen confirma subida')}else if(cur.c<cur.o){score--;why.push('volumen confirma bajada')}}
+ let slope=(f-cur.c)/Math.max(cur.c,1)*100;
+ if(slope>.08){score++;why.push('proyección+')}else if(slope<-.08){score--;why.push('proyección-')}
+ let sig=score>=5?'UP':score<=-5?'DOWN':'WAIT';
+ let confidence=Math.round(Math.min(100,Math.abs(score)/10*100));
+ return {e9,e21,r,v,atr,f,mom,volRatio,score,sig,confidence,why}
+}
+function render(){
+ if(c.length<30)return;let x=c.at(-1),a=analyze(c);
+ $('price').textContent='$'+fmt(x.c);$('open').textContent='$'+fmt(x.o);$('est').textContent='$'+fmt(a.f);
+ $('high').textContent='$'+fmt(x.h);$('low').textContent='$'+fmt(x.l);
+ $('move').textContent=((a.f-x.o)/x.o*100).toFixed(3)+'%';$('range').textContent='$'+fmt(x.h-x.l);
+ $('ema9').textContent='$'+fmt(a.e9);$('ema21').textContent='$'+fmt(a.e21);$('rsi').textContent=a.r.toFixed(1);
+ $('vwap').textContent='$'+fmt(a.v);$('mom').textContent=(a.mom>=0?'+':'')+a.mom.toFixed(3)+'%';
+ $('vol').textContent=fmt(x.v)+' · '+(a.volRatio||0).toFixed(2)+'×';
+ $('signal').textContent=a.sig==='UP'?'🟢 SUBE':a.sig==='DOWN'?'🔴 BAJA':'🟡 ESPERAR';
+ $('signal').className='signal '+(a.sig==='UP'?'up':a.sig==='DOWN'?'down':'wait');
+ $('strength').style.width=a.confidence+'%';$('score').textContent='Puntuación: '+a.score+' / 10 · Confianza '+a.confidence+'%';
+ $('reason').textContent=a.why.join(' · ');$('last').textContent=a.sig==='WAIT'?'ESPERAR':a.sig;
+ $('state');$('status').textContent='🟢 '+active+' · datos en vivo · '+new Date().toLocaleTimeString();
+}
+async function load(){
+ for(const s of SOURCES){try{let r=await fetch(s.api,{cache:'no-store'});if(!r.ok)throw 0;let d=await r.json();if(!Array.isArray(d)||d.length<30)throw 0;
+ c=d.map(x=>({t:+x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5],closed:!!x[6]}));
+ active=s.name;$('conn').textContent=s.name+' conectado';$('dot').style.background='#4de58a';render();openWS(s.ws);return}catch(e){}}
+ $('conn').textContent='Sin conexión';$('dot').style.background='#ff6678';$('status').innerHTML='<span class="bad">No se pudo conectar. Pulsa Actualizar.</span>';
+}
+function openWS(url){if(ws)try{ws.close()}catch(e){}try{ws=new WebSocket(url)}catch(e){return}
+ ws.onmessage=e=>{let k=JSON.parse(e.data).k,x={t:+k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c,v:+k.v,closed:!!k.x};
+ if(c.at(-1)?.t!==x.t)c.push(x);else c[c.length-1]=x;if(c.length>200)c.shift();render()};
+ ws.onclose=()=>setTimeout(()=>openWS(url),3000)
+}
+function timer(){if(!c.length)return;let end=c.at(-1).t+900000,s=Math.max(0,Math.floor((end-Date.now())/1000));$('count').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+$('refresh').onclick=load;setInterval(timer,1000);load();
+</script>
+</body></html>
