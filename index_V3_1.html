@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>₿ BTC V3.1 — Signal Lab</title>
+<style>
+:root{--bg:#080c18;--card:#121827;--card2:#0b1020;--line:#29344b;--txt:#eef2ff;--muted:#9aa6bd;--green:#24d27b;--red:#ff4d4d;--yellow:#ffd83d}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#080c18,#0d1220);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:auto;padding:20px 16px 50px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.title{font-size:30px;font-weight:800}.sub{color:var(--muted);margin-top:6px}.status{white-space:nowrap;font-weight:700}.dot{display:inline-block;width:13px;height:13px;border-radius:50%;margin-right:7px;background:var(--red)}.dot.ok{background:var(--green)}
+.card{background:rgba(18,24,39,.96);border:1px solid var(--line);border-radius:24px;padding:22px;margin-top:18px;box-shadow:0 12px 30px #0003}
+.signal{text-align:center}.signalIcon{font-size:72px}.signalText{font-size:52px;font-weight:900;letter-spacing:-2px}.score{font-size:26px;margin-top:4px}.bar{height:12px;background:#263149;border-radius:20px;overflow:hidden;margin:14px 0}.bar>i{display:block;height:100%;width:0;background:var(--yellow);transition:.3s}
+.msg{color:var(--muted);font-size:16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.box{background:var(--card2);padding:18px;border-radius:20px}.label{color:var(--muted);font-size:14px}.value{font-size:23px;font-weight:750;margin-top:8px}.section{font-size:25px;font-weight:800;margin-bottom:16px}.small{font-size:13px;color:var(--muted);line-height:1.5}
+button{border:1px solid var(--line);background:#182238;color:white;border-radius:14px;padding:12px 16px;font-size:16px;font-weight:700}button:active{transform:scale(.98)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.log{max-height:250px;overflow:auto;font-size:13px}.row{display:flex;justify-content:space-between;border-bottom:1px solid #202a3d;padding:10px 0}.green{color:var(--green)}.red{color:var(--red)}.yellow{color:var(--yellow)}
+@media(max-width:600px){.title{font-size:26px}.signalText{font-size:43px}.grid{gap:10px}.box{padding:14px}.value{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="title">₿ BTC V3.1 — Signal Lab</div><div class="sub">15m + Scalping · simulador · backtesting</div></div>
+    <div id="status" class="status"><span class="dot"></span>Sin conexión</div>
+  </div>
+
+  <div class="card signal">
+    <div id="icon" class="signalIcon">🟡</div>
+    <div id="signal" class="signalText yellow">ESPERAR</div>
+    <div class="score">Score: <b id="score">--</b>/100</div>
+    <div class="bar"><i id="scoreBar"></i></div>
+    <div id="message" class="msg">Conectando con Binance…</div>
+  </div>
+
+  <div class="card grid">
+    <div class="box"><div class="label">BTC/USDT</div><div id="price" class="value">—</div></div>
+    <div class="box"><div class="label">Cierre de vela</div><div id="closeTime" class="value">—</div></div>
+    <div class="box"><div class="label">Apertura 15m</div><div id="open" class="value">—</div></div>
+    <div class="box"><div class="label">Cambio vela</div><div id="change" class="value">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="section">Indicadores</div>
+    <div class="grid">
+      <div class="box"><div class="label">EMA 9</div><div id="ema9" class="value">—</div></div>
+      <div class="box"><div class="label">EMA 21</div><div id="ema21" class="value">—</div></div>
+      <div class="box"><div class="label">RSI 14</div><div id="rsi" class="value">—</div></div>
+      <div class="box"><div class="label">VWAP</div><div id="vwap" class="value">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">Modo scalping</div>
+    <div class="grid">
+      <div class="box"><div class="label">Tendencia</div><div id="trend" class="value">—</div></div>
+      <div class="box"><div class="label">Momentum</div><div id="momentum" class="value">—</div></div>
+      <div class="box"><div class="label">Volatilidad</div><div id="volatility" class="value">—</div></div>
+      <div class="box"><div class="label">Confianza</div><div id="confidence" class="value">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">Simulador / señales</div>
+    <div class="actions"><button id="refresh">Actualizar ahora</button><button id="clear">Borrar registro</button></div>
+    <p class="small">El simulador no apuesta ni ejecuta órdenes. Las señales son experimentales y no garantizan ganancias. El rendimiento debe medirse con datos históricos y señales futuras.</p>
+    <div id="log" class="log"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const state={candles:[],current:null,lastSignal:null,ws:null,retry:0};
+
+function fmt(n){return Number(n).toLocaleString('en-US',{maximumFractionDigits:2})}
+function pct(n){return (n>=0?'+':'')+n.toFixed(2)+'%'}
+function ema(values,p){if(values.length<p)return null;let k=2/(p+1),e=values.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<values.length;i++)e=values[i]*k+e*(1-k);return e}
+function rsi(values,p=14){if(values.length<p+1)return null;let g=0,l=0;for(let i=values.length-p;i<values.length;i++){let d=values[i]-values[i-1];if(d>=0)g+=d;else l-=d}let ag=g/p,al=l/p;return al===0?100:100-100/(1+ag/al)}
+function calcVWAP(cs){let pv=0,v=0;for(const c of cs){let tp=(c.h+c.l+c.c)/3;pv+=tp*c.v;v+=c.v}return v?pv/v:null}
+
+function updateSignal(){
+ const cs=state.candles, c=state.current;if(cs.length<25||!c)return;
+ const closes=cs.map(x=>x.c).concat([c.c]);
+ const e9=ema(closes,9),e21=ema(closes,21),rs=rsi(closes),vw=calcVWAP(cs.concat([c]));
+ let score=50;
+ if(e9>e21)score+=18;else score-=18;
+ if(c.c>vw)score+=12;else score-=12;
+ if(rs>55&&rs<72)score+=10;else if(rs<45&&rs>28)score-=10;
+ const change=(c.c-c.o)/c.o*100;
+ if(change>0.10)score+=7;else if(change<-0.10)score-=7;
+ score=Math.max(0,Math.min(100,Math.round(score)));
+ let sig='ESPERAR',cls='yellow',ic='🟡';
+ if(score>=70){sig='SUBIR';cls='green';ic='🟢'} else if(score<=30){sig='BAJAR';cls='red';ic='🔴'}
+ $('score').textContent=score;$('scoreBar').style.width=score+'%';$('scoreBar').style.background=score>=70?'var(--green)':score<=30?'var(--red)':'var(--yellow)';
+ $('signal').textContent=sig;$('signal').className='signalText '+cls;$('icon').textContent=ic;
+ $('price').textContent='$'+fmt(c.c);$('open').textContent='$'+fmt(c.o);$('change').textContent=pct(change);
+ $('ema9').textContent=e9?'$'+fmt(e9):'—';$('ema21').textContent=e21?'$'+fmt(e21):'—';$('rsi').textContent=rs?rs.toFixed(1):'—';$('vwap').textContent=vw?'$'+fmt(vw):'—';
+ $('trend').textContent=e9>e21?'ALCISTA':'BAJISTA';$('momentum').textContent=rs>55?'POSITIVO':rs<45?'NEGATIVO':'NEUTRO';
+ $('volatility').textContent=Math.abs(change)>0.35?'ALTA':Math.abs(change)>0.15?'MEDIA':'BAJA';$('confidence').textContent=score+'%';
+ if(state.lastSignal!==sig){state.lastSignal=sig; addLog(sig,score,c.c)}
+ $('message').textContent='Datos en tiempo real · señal experimental';
+}
+
+function addLog(sig,score,price){
+ const d=new Date();let arr=JSON.parse(localStorage.getItem('btcV31log')||'[]');
+ arr.unshift({t:d.toLocaleTimeString(),sig,score,price});arr=arr.slice(0,30);localStorage.setItem('btcV31log',JSON.stringify(arr));renderLog();
+}
+function renderLog(){let a=JSON.parse(localStorage.getItem('btcV31log')||'[]');$('log').innerHTML=a.map(x=>`<div class="row"><span>${x.t} · ${x.sig}</span><b>$${fmt(x.price)} · ${x.score}</b></div>`).join('')||'<div class="small">Aún no hay señales registradas.</div>'}
+function countdown(){
+ if(!state.current)return;let ms=state.current.T-Date.now(),s=Math.max(0,Math.floor(ms/1000));$('closeTime').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+async function seed(){
+ try{
+  const r=await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=100',{cache:'no-store'});
+  if(!r.ok)throw new Error('REST '+r.status);const a=await r.json();
+  state.candles=a.slice(0,-1).map(x=>({t:x[0],T:x[6],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
+  const x=a[a.length-1];state.current={t:x[0],T:x[6],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]};
+  updateSignal(); connect();
+ }catch(e){$('message').textContent='No se pudo obtener Binance. Reintentando…';setStatus(false);setTimeout(seed,4000)}
+}
+function setStatus(ok){$('status').innerHTML=`<span class="dot ${ok?'ok':''}"></span>${ok?'Conectado':'Sin conexión'}`}
+function connect(){
+ if(state.ws){try{state.ws.close()}catch(e){}}
+ const ws=new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_15m');
+ state.ws=ws;
+ ws.onopen=()=>{state.retry=0;setStatus(true)};
+ ws.onmessage=ev=>{try{
+  const d=JSON.parse(ev.data),k=d.k;if(!k)return;
+  const x={t:k.t,T:k.T,o:+k.o,h:+k.h,l:+k.l,c:+k.c,v:+k.v};
+  if(!state.current||x.t!==state.current.t){
+    if(state.current)state.candles.push(state.current);
+    state.candles=state.candles.slice(-100);state.lastSignal=null;
+  }
+  state.current=x;updateSignal();
+ }catch(e){}};
+ ws.onerror=()=>{setStatus(false)};
+ ws.onclose=()=>{setStatus(false);clearTimeout(state.retryTimer);state.retryTimer=setTimeout(connect,Math.min(15000,2000*Math.max(1,++state.retry)))}
+}
+$('refresh').onclick=()=>seed();
+$('clear').onclick=()=>{localStorage.removeItem('btcV31log');renderLog()};
+renderLog();seed();setInterval(countdown,250);
+</script>
+</body>
+</html>
