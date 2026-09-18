@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>₿ BTC 15-Min Predictor V4.2 PRO</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050a12;color:#eef3fb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:auto;padding:18px 14px 35px}.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.logo{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#f7931a;color:#fff;font-size:32px;font-weight:800}
+h1{font-size:25px;margin:0}.sub{color:#9eacc2;margin-top:3px}.badge{margin-left:auto;border:1px solid #00e5a0;color:#00e5a0;border-radius:12px;padding:7px 9px;font-weight:800;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.card{background:#0d1624;border:1px solid #1d3048;border-radius:20px;padding:18px;margin-bottom:12px}.wide{grid-column:1/-1}
+.label{color:#91a0b7;text-transform:uppercase;font-size:13px;letter-spacing:1px}.value{font-size:25px;font-weight:800;margin-top:8px}.small{font-size:14px;color:#9eacc2}
+.green{color:#00e5a0}.red{color:#ff5f79}.yellow{color:#ffd166}.blue{color:#65a7ff}
+.signal{border:2px solid #00e5a0;background:linear-gradient(135deg,#06231d,#0d1624);padding:20px;border-radius:22px}
+.signal.down{border-color:#ff5f79;background:linear-gradient(135deg,#260b13,#0d1624)}.signal.wait{border-color:#ffd166;background:linear-gradient(135deg,#29220b,#0d1624)}
+.signalTitle{font-size:14px;color:#a9b7ca;font-weight:800;letter-spacing:1px}.signalMain{font-size:40px;font-weight:900;margin:3px 0}.confidence{font-size:20px;font-weight:800}
+.bar{height:9px;background:#172638;border-radius:9px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;border-radius:9px;background:#00e5a0}.down .bar i{background:#ff5f79}.wait .bar i{background:#ffd166}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}.row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #1b2a3e;gap:10px}.row b{white-space:nowrap}
+button{width:100%;border:0;border-radius:16px;padding:16px;background:#2367e8;color:white;font-size:18px;font-weight:800}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:9px 5px;border-bottom:1px solid #1b2a3e;text-align:left}th{color:#93a2b8}
+.pills{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.pill{background:#0a1320;border:1px solid #1b304c;border-radius:13px;padding:11px 5px;text-align:center;font-size:12px}.pill b{display:block;margin-top:5px}
+.notice{color:#8391a5;font-size:12px;line-height:1.5}.status{font-weight:700}
+@media(max-width:650px){.rows{grid-template-columns:1fr}.pills{grid-template-columns:repeat(2,1fr)}h1{font-size:22px}.signalMain{font-size:36px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div class="logo">₿</div><div><h1>BTC 15-Min Predictor</h1><div class="sub">Señal anticipada • BTC/USDT • V4.2 PRO</div></div><div class="badge">V4.2<br>PRO</div></div>
+<div class="grid">
+<div class="card"><div class="label">BTC/USDT</div><div id="price" class="value">—</div><div id="change" class="small">Conectando con Binance…</div></div>
+<div class="card"><div class="label">Cierre de vela (15m)</div><div id="count" class="value">—</div><div id="status" class="small status">Preparando datos…</div></div>
+<div class="card"><div class="label">Precio estimado de cierre</div><div id="estimate" class="value">—</div><div id="estimatePct" class="small">—</div></div>
+
+<div id="signalCard" class="signal wide"><div class="signalTitle">SEÑAL ANTICIPADA</div><div id="signal" class="signalMain">🟡 ESPERAR</div><div id="signalNote" class="small">Esperando datos suficientes…</div>
+<div style="margin-top:12px;display:flex;justify-content:space-between"><span>Fuerza de señal</span><span id="confidence" class="confidence">—</span></div><div class="bar"><i id="confBar" style="width:0%"></i></div>
+<div id="earlyNote" class="small" style="margin-top:10px">La señal se calcula durante la vela en formación; no espera al cierre.</div></div>
+
+<div class="card wide"><div class="rows">
+<div class="row"><span>Apertura de vela</span><b id="open">—</b></div><div class="row"><span>Máximo</span><b id="high">—</b></div>
+<div class="row"><span>Mínimo</span><b id="low">—</b></div><div class="row"><span>Precio actual</span><b id="current">—</b></div>
+</div></div>
+
+<div class="card wide"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="label">INDICADORES</div><div id="trend" class="green" style="font-weight:800">—</div></div>
+<div class="rows">
+<div class="row"><span>EMA 9</span><b id="ema9">—</b></div><div class="row"><span>EMA 21</span><b id="ema21">—</b></div>
+<div class="row"><span>RSI 14</span><b id="rsi">—</b></div><div class="row"><span>VWAP</span><b id="vwap">—</b></div>
+<div class="row"><span>Momentum</span><b id="momentum">—</b></div><div class="row"><span>Volumen relativo</span><b id="relVol">—</b></div>
+<div class="row"><span>Posición en la vela</span><b id="position">—</b></div><div class="row"><span>Velocidad</span><b id="speed">—</b></div>
+</div></div>
+
+<div class="card wide"><div class="pills"><div class="pill">VOLUMEN<b id="pVol">—</b></div><div class="pill">MOMENTUM<b id="pMom">—</b></div><div class="pill">RSI<b id="pRsi">—</b></div><div class="pill">VWAP<b id="pVwap">—</b></div><div class="pill">TENDENCIA<b id="pTrend">—</b></div></div></div>
+
+<div class="card"><div class="label">SIMULADOR</div><div class="row"><span>Señales</span><b id="signals">—</b></div><div class="row"><span>Aciertos</span><b id="wins" class="green">—</b></div><div class="row"><span>Fallos</span><b id="losses" class="red">—</b></div><div class="row"><span>Precisión histórica</span><b id="accuracy">—</b></div></div>
+<div class="card"><div class="label">ÚLTIMA PREDICCIÓN</div><div id="lastPred" class="value">—</div><div id="lastResult" class="small">Resultado real: —</div><div class="small" style="margin-top:10px">La precisión se calcula solo con predicciones cerradas.</div></div>
+
+<div class="card wide"><div class="label">ÚLTIMAS SEÑALES CERRADAS</div><table><thead><tr><th>Hora</th><th>Señal</th><th>Resultado</th><th>Estado</th></tr></thead><tbody id="history"><tr><td colspan="4">Cargando historial…</td></tr></tbody></table></div>
+<div class="wide"><button onclick="loadAll()">⚡ Actualizar ahora</button></div>
+<div class="card wide notice"><b>LIVE • Binance</b><br>Estimación matemática experimental; no es una garantía de resultado. Este sitio no realiza apuestas ni órdenes automáticamente.</div>
+</div></div>
+
+<script>
+const API="https://api.binance.com/api/v3";
+let candles=[],current=null,history=[];
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct=n=>(n>=0?"+":"")+n.toFixed(3)+"%";
+
+function ema(a,p){if(a.length<p)return null;let e=a.slice(0,p).reduce((x,y)=>x+y,0)/p,k=2/(p+1);for(let i=p;i<a.length;i++)e=a[i]*k+e*(1-k);return e}
+function rsi(a,p=14){if(a.length<p+1)return 50;let g=0,l=0;for(let i=a.length-p;i<a.length;i++){let d=a[i]-a[i-1];if(d>=0)g+=d;else l-=d}if(l===0)return 100;return 100-100/(1+(g/p)/(l/p))}
+function vwap(cs){let pv=0,v=0;cs.forEach(c=>{pv+=((c.h+c.l+c.c)/3)*c.v;v+=c.v});return v?pv/v:null}
+function relVol(cs){if(cs.length<21)return 1;let a=cs.slice(-21),avg=a.slice(0,-1).reduce((x,c)=>x+c.v,0)/20;return avg?a[20].v/avg:1}
+
+function signalFor(cs){
+ if(cs.length<30)return {dir:"WAIT",strength:50};
+ const a=cs.map(c=>c.c),p=cs[cs.length-1].c,e9=ema(a,9),e21=ema(a,21),VW=vwap(cs.slice(-48)),R=rsi(a);
+ const mom=(p-a[a.length-4])/a[a.length-4]*100,rv=relVol(cs),c=cs[cs.length-1];
+ const pos=(p-c.l)/Math.max(c.h-c.l,1e-9)*100,speed=(p-c.o)/c.o*100;
+ const s=[e9>e21?1:-1,p>VW?1:-1,R>55?1:R<45?-1:0,mom>.05?1:mom<-.05?-1:0,pos>58?1:pos<42?-1:0,speed>.03?1:speed<-.03?-1:0,rv>=1.15?(speed>=0?1:-1):0];
+ const raw=s.reduce((x,y)=>x+y,0),active=s.filter(x=>x).length||1;
+ let dir=raw>=3?"UP":raw<=-3?"DOWN":"WAIT";
+ const elapsed=(Date.now()-c.t0)/900000;
+ if(elapsed<.18&&Math.abs(raw)<4)dir="WAIT";
+ return {dir,strength:Math.round(Math.min(96,Math.max(50,50+Math.abs(raw)/active*46))),e9,e21,R,VW,mom,rv,pos,speed,raw};
+}
+function estimate(p,o,e9,e21,VW,m){return p*(1+((e9-e21)/p)*.55+((p-VW)/p)*.25+(m/100)*.20)}
+
+function compute(){
+ if(!current||candles.length<30)return;
+ const s=signalFor(candles),p=current.c;
+ $("price").textContent="$"+fmt(p);$("current").textContent="$"+fmt(p);$("open").textContent="$"+fmt(current.o);
+ $("high").textContent="$"+fmt(current.h);$("low").textContent="$"+fmt(current.l);
+ $("ema9").textContent=fmt(s.e9);$("ema21").textContent=fmt(s.e21);$("rsi").textContent=s.R.toFixed(1);
+ $("vwap").textContent=fmt(s.VW);$("momentum").textContent=pct(s.mom);$("relVol").textContent=s.rv.toFixed(2)+"x";
+ $("position").textContent=s.pos.toFixed(0)+"%";$("speed").textContent=pct(s.speed);
+ const card=$("signalCard");card.className="signal wide "+(s.dir==="DOWN"?"down":s.dir==="WAIT"?"wait":"");
+ $("signal").textContent=s.dir==="UP"?"🟢 ALCISTA":s.dir==="DOWN"?"🔴 BAJISTA":"🟡 ESPERAR";
+ $("confidence").textContent=s.strength+"%";$("confBar").style.width=s.strength+"%";
+ $("signalNote").textContent=s.dir==="WAIT"?"Confluencia insuficiente; no fuerces una señal.":s.dir==="UP"?"Confluencia alcista detectada durante la vela en formación.":"Confluencia bajista detectada durante la vela en formación.";
+ $("trend").textContent=s.raw>=2?"TENDENCIA ALCISTA":s.raw<=-2?"TENDENCIA BAJISTA":"TENDENCIA MIXTA";
+ $("trend").className=s.raw>=2?"green":s.raw<=-2?"red":"yellow";
+ const est=estimate(p,current.o,s.e9,s.e21,s.VW,s.mom);$("estimate").textContent="$"+fmt(est);$("estimatePct").textContent=pct((est-p)/p*100);
+ $("pVol").textContent=s.rv>=1.2?"ALTO":s.rv>=.85?"NORMAL":"BAJO";$("pMom").textContent=s.mom>.05?"POSITIVO":s.mom<-.05?"NEGATIVO":"NEUTRO";
+ $("pRsi").textContent=s.R>70?"ALTO":s.R<30?"BAJO":s.R>55?"ALCISTA":s.R<45?"BAJISTA":"NEUTRO";$("pVwap").textContent=p>s.VW?"POR ENCIMA":"POR DEBAJO";$("pTrend").textContent=s.raw>=2?"ALCISTA":s.raw<=-2?"BAJISTA":"MIXTA";
+ updateCountdown();
+}
+function updateCountdown(){if(!current)return;let ms=Math.max(0,current.t0+900000-Date.now()),sec=Math.floor(ms/1000),m=Math.floor(sec/60),s=sec%60;$("count").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");$("status").textContent="Vela en formación • señal anticipada"}
+async function get(u){let r=await fetch(u,{cache:"no-store"});if(!r.ok)throw Error(r.status);return r.json()}
+async function loadAll(){
+ try{
+  $("status").textContent="Conectando…";
+  const [k,t]=await Promise.all([get(API+"/klines?symbol=BTCUSDT&interval=15m&limit=100"),get(API+"/ticker/24hr?symbol=BTCUSDT")]);
+  candles=k.map(x=>({t0:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));current=candles.at(-1);
+  $("change").textContent=(+t.priceChangePercent>=0?"+":"")+Number(t.priceChangePercent).toFixed(2)+"% (24h)";
+  $("change").className="small "+(+t.priceChangePercent>=0?"green":"red");
+  compute();simulate();renderHistory();
+ }catch(e){$("status").textContent="Sin conexión con Binance";$("signal").textContent="🟡 ESPERAR";$("signalNote").textContent="No se pudieron actualizar los datos. Revisa tu conexión."}
+}
+function simulate(){
+ let w=0,l=0,rows=[];
+ for(let i=35;i<candles.length-1;i++){
+  let sig=signalFor(candles.slice(0,i)),next=candles[i],actual=next.c>next.o?"UP":next.c<next.o?"DOWN":"FLAT";
+  if(sig.dir==="WAIT")continue;let ok=sig.dir===actual;ok?w++:l++;if(rows.length<8)rows.push({t:next.t0,sig:sig.dir,ok});
+ }
+ let total=w+l;$("signals").textContent=total;$("wins").textContent=w;$("losses").textContent=l;$("accuracy").textContent=total?Math.round(w/total*100)+"%":"—";
+ if(rows.length){$("lastPred").textContent=rows[0].sig==="UP"?"🟢 ALCISTA":"🔴 BAJISTA";$("lastResult").textContent="Resultado cerrado: "+(rows[0].ok?"ACIERTO":"FALLO")}
+ history=rows;
+}
+function renderHistory(){$("history").innerHTML=history.length?history.map(r=>{let h=new Date(r.t).toLocaleTimeString("es-US",{hour:"2-digit",minute:"2-digit"});return `<tr><td>${h}</td><td class="${r.sig==="UP"?"green":"red"}">${r.sig==="UP"?"ALCISTA":"BAJISTA"}</td><td>${r.ok?"✅":"❌"}</td><td>Cerrada</td></tr>`}).join(""):`<tr><td colspan="4">Aún no hay señales cerradas.</td></tr>`}
+setInterval(updateCountdown,1000);setInterval(()=>{if(current)compute()},5000);setInterval(loadAll,30000);loadAll();
+</script>
+</body>
+</html>
