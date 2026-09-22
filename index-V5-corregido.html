@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>₿ BTC 15-Min PRO V5</title>
+<style>
+:root{--bg:#080d1d;--card:#121a30;--box:#0d1427;--text:#f4f6fb;--muted:#9da9c4;--line:#293654;--green:#22c55e;--red:#ef4444;--yellow:#f5c542}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:820px;margin:auto;padding:20px 14px 50px}.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:20px;margin-bottom:18px;box-shadow:0 10px 30px #0003}
+h1{font-size:28px;margin:0 0 8px}.sub{color:var(--muted);font-size:16px;line-height:1.45}
+.signal{margin-top:20px;border-radius:28px;padding:28px 14px;text-align:center;background:#4b3d12}
+.signal .emoji{font-size:50px}.signal .label{font-size:36px;font-weight:900;margin-top:4px}.green{background:#0d4b2a}.red{background:#551b24}.yellow{background:#4b3d12}
+.status{margin-top:16px;color:var(--muted);min-height:24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.box{background:var(--box);border-radius:20px;padding:17px 14px;min-height:88px}.k{color:var(--muted);font-size:15px}.v{font-size:20px;font-weight:700;margin-top:9px;word-break:break-word}
+.section{font-size:22px;font-weight:800;margin-bottom:12px}.small{font-size:13px;color:var(--muted);line-height:1.5}
+button{width:100%;border:1px solid var(--line);background:#18233e;color:white;border-radius:16px;padding:14px;font-size:16px;font-weight:700;margin-top:12px}
+.row{display:flex;gap:10px}.row button{flex:1}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:9px 5px;border-bottom:1px solid var(--line);text-align:left}.ok{color:var(--green)}.bad{color:var(--red)}
+@media(max-width:520px){main{padding:14px 10px 40px}h1{font-size:25px}.signal .label{font-size:32px}.grid{gap:9px}.box{padding:14px 12px}}
+</style>
+</head>
+<body>
+<main>
+<section class="card">
+<h1>₿ BTC 15-Min PRO V5</h1>
+<div class="sub">Señal anticipada experimental • BTC/USDT • datos públicos de Binance</div>
+<div id="signal" class="signal yellow"><div class="emoji">🟡</div><div class="label">ESPERAR</div></div>
+<div id="status" class="status">Conectando con Binance…</div>
+</section>
+
+<section class="card">
+<div class="grid">
+<div class="box"><div class="k">Tiempo restante</div><div id="time" class="v">--:--</div></div>
+<div class="box"><div class="k">Precio actual</div><div id="price" class="v">—</div></div>
+<div class="box"><div class="k">Apertura</div><div id="open" class="v">—</div></div>
+<div class="box"><div class="k">Máximo / mínimo</div><div id="hl" class="v">—</div></div>
+<div class="box"><div class="k">EMA 9</div><div id="ema9" class="v">—</div></div>
+<div class="box"><div class="k">EMA 21</div><div id="ema21" class="v">—</div></div>
+<div class="box"><div class="k">RSI 14</div><div id="rsi" class="v">—</div></div>
+<div class="box"><div class="k">VWAP</div><div id="vwap" class="v">—</div></div>
+<div class="box"><div class="k">Momentum</div><div id="mom" class="v">—</div></div>
+<div class="box"><div class="k">Volumen relativo</div><div id="vol" class="v">—</div></div>
+<div class="box"><div class="k">Score</div><div id="score" class="v">—</div></div>
+<div class="box"><div class="k">Modo</div><div id="mode" class="v">—</div></div>
+</div>
+</section>
+
+<section class="card">
+<div class="section">Simulador</div>
+<div class="small">Cada señal queda registrada al cerrar la vela y se compara con el movimiento real de esa vela. No coloca órdenes.</div>
+<div class="grid" style="margin-top:14px">
+<div class="box"><div class="k">Aciertos</div><div id="wins" class="v">0</div></div>
+<div class="box"><div class="k">Fallos</div><div id="losses" class="v">0</div></div>
+<div class="box"><div class="k">Señales</div><div id="signals" class="v">0</div></div>
+<div class="box"><div class="k">Precisión</div><div id="accuracy" class="v">—</div></div>
+</div>
+<div class="row"><button id="reset">Reiniciar estadísticas</button><button id="refresh">Actualizar ahora</button></div>
+<div id="history" style="margin-top:16px"></div>
+</section>
+
+<section class="card">
+<div class="section">Cómo decide V5</div>
+<div class="small">
+V5 busca una señal <b>antes</b> de que la vela termine. Combina tendencia EMA 9/21, posición frente a VWAP, RSI, momentum y volumen relativo. Si las señales se contradicen o el movimiento es demasiado débil, muestra 🟡 ESPERAR. El score es una puntuación del modelo, no una probabilidad garantizada.
+</div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+const API=[
+ 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=120',
+ 'https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=120'
+];
+let candles=[], currentKey=null, lastSignal=null, timer=null;
+
+async function fetchJSON(url,ms=7000){
+ const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms);
+ try{const r=await fetch(url,{cache:'no-store',signal:c.signal}); if(!r.ok) throw Error('HTTP '+r.status); return await r.json()}
+ finally{clearTimeout(t)}
+}
+async function getData(){
+ let err;
+ for(const u of API){try{return await fetchJSON(u)}catch(e){err=e}}
+ throw err||Error('Sin conexión');
+}
+function ema(vals,p){let k=2/(p+1),e=vals.slice(0,p).reduce((a,b)=>a+b,0)/p;for(let i=p;i<vals.length;i++)e=vals[i]*k+e*(1-k);return e}
+function rsi(vals,p=14){
+ if(vals.length<p+1)return NaN;let g=0,l=0;
+ for(let i=vals.length-p;i<vals.length;i++){let d=vals[i]-vals[i-1];if(d>=0)g+=d;else l-=d}
+ if(l===0)return 100;let rs=(g/p)/(l/p);return 100-100/(1+rs)
+}
+function calcVWAP(cs){
+ let pv=0,v=0;for(const c of cs){let typical=(c.h+c.l+c.c)/3;pv+=typical*c.v;v+=c.v}return pv/v
+}
+function scoreModel(cs){
+ const closes=cs.map(x=>x.c), vols=cs.map(x=>x.v), c=cs[cs.length-1];
+ const e9=ema(closes,9),e21=ema(closes,21),rv=closes.length>=4?((c.c-closes[closes.length-4])/closes[closes.length-4])*100:0;
+ const rr=rsi(closes), vw=calcVWAP(cs), avgV=vols.slice(-21,-1).reduce((a,b)=>a+b,0)/20, vr=c.v/avgV;
+ let s=0;
+ s += e9>e21 ? 2 : -2;
+ s += c.c>vw ? 1.5 : -1.5;
+ s += rr>52 ? 1 : rr<48 ? -1 : 0;
+ s += rv>0.08 ? 1.5 : rv<-0.08 ? -1.5 : 0;
+ s += vr>1.15 ? (s>=0?1:-1) : 0;
+ // Early mode: do not require the candle to already have a large move.
+ let label='ESPERAR', cls='yellow', emoji='🟡', mode='FILTRO';
+ if(s>=3.0){label='UP';cls='green';emoji='🟢';mode='ANTICIPADA'}
+ else if(s<=-3.0){label='DOWN';cls='red';emoji='🔴';mode='ANTICIPADA'}
+ return {e9,e21,rr,vw,rv,vr,s,label,cls,emoji,mode};
+}
+function render(c, m){
+ $('price').textContent='$'+fmt(c.c);$('open').textContent='$'+fmt(c.o);
+ $('hl').textContent='$'+fmt(c.h)+' / $'+fmt(c.l);
+ $('ema9').textContent='$'+fmt(m.e9);$('ema21').textContent='$'+fmt(m.e21);
+ $('rsi').textContent=Number.isFinite(m.rr)?m.rr.toFixed(1):'—';
+ $('vwap').textContent='$'+fmt(m.vw);
+ $('mom').textContent=(m.rv>=0?'+':'')+m.rv.toFixed(3)+'%';
+ $('vol').textContent=m.vr.toFixed(2)+'x';
+ $('score').textContent=(m.s>=0?'+':'')+m.s.toFixed(2);
+ $('mode').textContent=m.mode;
+ const el=$('signal');el.className='signal '+m.cls;el.innerHTML='<div class="emoji">'+m.emoji+'</div><div class="label">'+(m.label==='UP'?'SUBE':m.label==='DOWN'?'BAJA':'ESPERAR')+'</div>';
+}
+function parse(a){return a.map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}))}
+function remaining(){
+ if(!candles.length)return;
+ const start=candles[candles.length-1].t, end=start+15*60*1000, left=Math.max(0,end-Date.now());
+ const sec=Math.floor(left/1000);$('time').textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+ if(left<=1000) load();
+}
+function loadStats(){
+ const a=JSON.parse(localStorage.getItem('btcV5stats')||'[]');
+ let w=a.filter(x=>x.ok).length,l=a.filter(x=>x.ok===false).length;
+ $('wins').textContent=w;$('losses').textContent=l;$('signals').textContent=a.length;
+ $('accuracy').textContent=a.length?(100*w/a.length).toFixed(1)+'%':'—';
+ $('history').innerHTML=a.slice(-8).reverse().map(x=>'<div class="small">'+new Date(x.t).toLocaleTimeString()+' • '+x.s+' • '+(x.ok?'<span class="ok">ACIERTO</span>':'<span class="bad">FALLO</span>')+'</div>').join('');
+}
+function saveClosed(){
+ if(!lastSignal||!candles.length)return;
+ const c=candles[candles.length-1];
+ if(c.t===lastSignal.key)return;
+ // Signal from the previous completed candle, evaluated against its open/close.
+ const ok=lastSignal.s==='ESPERAR'?null:(lastSignal.s==='UP'?c.c>c.o:c.c<c.o);
+ if(ok===null)return;
+ const a=JSON.parse(localStorage.getItem('btcV5stats')||'[]');
+ a.push({t:Date.now(),s:lastSignal.s,ok});localStorage.setItem('btcV5stats',JSON.stringify(a.slice(-100)));
+ lastSignal=null;loadStats();
+}
+async function load(){
+ try{
+  $('status').textContent='Descargando datos…';
+  const raw=await getData(); candles=parse(raw);
+  const c=candles[candles.length-1]; const m=scoreModel(candles);
+  currentKey=c.t; render(c,m); lastSignal={key:c.t,s:m.label};
+  $('status').textContent='Conectado • actualización automática cada 5 s';
+  saveClosed();
+ }catch(e){$('status').textContent='⚠️ No se pudo conectar. Reintentando automáticamente…'}
+}
+$('reset').onclick=()=>{if(confirm('¿Reiniciar estadísticas?')){localStorage.removeItem('btcV5stats');loadStats()}};
+$('refresh').onclick=load;
+loadStats();load();timer=setInterval(()=>{remaining(); if(Date.now()%5000<1000)load()},1000);
+</script>
+</body>
+</html>
