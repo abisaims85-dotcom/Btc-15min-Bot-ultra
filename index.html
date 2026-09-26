@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>₿ BTC 15-Min V5 PRO</title>
+<style>
+:root{
+  --bg:#050505;--card:#101010;--card2:#151515;--line:#2a2a2a;
+  --text:#f4f4f4;--muted:#a8a8a8;--green:#20d66b;--red:#ff4d5a;--yellow:#ffd21c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 40px}
+h1{font-size:24px;margin:0 0 4px;font-weight:800}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.card{background:linear-gradient(180deg,#151515,#0e0e0e);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 25px rgba(0,0,0,.22)}
+.signal{border-width:2px;text-align:center;padding:20px 14px}
+.signal.green{border-color:var(--green)} .signal.red{border-color:var(--red)} .signal.yellow{border-color:var(--yellow)}
+.light{font-size:46px;line-height:1;margin-bottom:8px}
+.signalTitle{font-size:29px;font-weight:900;letter-spacing:.3px}
+.reason{color:#cfcfcf;font-size:14px;margin-top:8px;line-height:1.45}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{background:var(--card2);border:1px solid #252525;border-radius:13px;padding:11px}
+.label{font-size:11px;color:var(--muted);margin-bottom:5px}
+.value{font-size:17px;font-weight:750;font-variant-numeric:tabular-nums}
+.big .value{font-size:21px}
+.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #242424;padding:9px 0}
+.row:last-child{border-bottom:0}
+.small{font-size:12px;color:var(--muted)}
+.status{display:flex;align-items:center;gap:8px;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--yellow);display:inline-block}
+.dot.ok{background:var(--green)}.dot.bad{background:var(--red)}
+button{width:100%;border:1px solid #333;background:#1b1b1b;color:#fff;padding:13px;border-radius:12px;font-size:15px;font-weight:700}
+button:active{transform:scale(.99)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:8px 5px;border-bottom:1px solid #262626}
+th{color:var(--muted);font-weight:600}
+.pos{color:var(--green)}.neg{color:var(--red)}.wait{color:var(--yellow)}
+.note{font-size:12px;line-height:1.5;color:#aaa}
+.error{color:#ff8890}
+@media(min-width:650px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>₿ BTC 15-Min V5 PRO</h1>
+  <div class="sub">Señal anticipada • entrada • Stop Loss • Take Profit • sin ejecutar órdenes</div>
+
+  <div class="card">
+    <div class="status"><span id="dot" class="dot"></span><span id="connection">Conectando con Binance…</span></div>
+  </div>
+
+  <div id="signalCard" class="card signal yellow">
+    <div id="light" class="light">🟡</div>
+    <div id="signalTitle" class="signalTitle">ESPERAR</div>
+    <div id="reason" class="reason">Preparando datos de BTC/USDT…</div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="metric big"><div class="label">Precio actual</div><div id="price" class="value">—</div></div>
+      <div class="metric big"><div class="label">Tiempo restante</div><div id="countdown" class="value">—</div></div>
+      <div class="metric"><div class="label">Apertura de vela</div><div id="open" class="value">—</div></div>
+      <div class="metric"><div class="label">Máximo</div><div id="high" class="value">—</div></div>
+      <div class="metric"><div class="label">Mínimo</div><div id="low" class="value">—</div></div>
+      <div class="metric"><div class="label">Cierre estimado</div><div id="estimated" class="value">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="metric"><div class="label">EMA 9</div><div id="ema9" class="value">—</div></div>
+      <div class="metric"><div class="label">EMA 21</div><div id="ema21" class="value">—</div></div>
+      <div class="metric"><div class="label">RSI 14</div><div id="rsi" class="value">—</div></div>
+      <div class="metric"><div class="label">VWAP</div><div id="vwap" class="value">—</div></div>
+      <div class="metric"><div class="label">Momentum</div><div id="momentum" class="value">—</div></div>
+      <div class="metric"><div class="label">Volatilidad ATR</div><div id="atr" class="value">—</div></div>
+      <div class="metric"><div class="label">Volumen relativo</div><div id="volumeRel" class="value">—</div></div>
+      <div class="metric"><div class="label">Fase de vela</div><div id="phase" class="value">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div class="metric"><div class="label">Entrada sugerida</div><div id="entry" class="value">—</div></div>
+      <div class="metric"><div class="label">Stop Loss dinámico</div><div id="sl" class="value">—</div></div>
+      <div class="metric"><div class="label">Take Profit dinámico</div><div id="tp" class="value">—</div></div>
+      <div class="metric"><div class="label">Riesgo / beneficio</div><div id="rr" class="value">—</div></div>
+      <div class="metric"><div class="label">Confianza</div><div id="confidence" class="value">—</div></div>
+      <div class="metric"><div class="label">Sesgo</div><div id="bias" class="value">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span>Señal anticipada</span><strong id="early">—</strong></div>
+    <div class="row"><span>Última actualización</span><strong id="updated">—</strong></div>
+    <div class="row"><span>Velas cargadas</span><strong id="bars">—</strong></div>
+    <button id="refresh">Actualizar datos ahora</button>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 8px">Simulador</h3>
+    <div class="grid">
+      <div class="metric"><div class="label">Aciertos</div><div id="wins" class="value">0</div></div>
+      <div class="metric"><div class="label">Fallos</div><div id="losses" class="value">0</div></div>
+      <div class="metric"><div class="label">Señales cerradas</div><div id="closed" class="value">0</div></div>
+      <div class="metric"><div class="label">Precisión</div><div id="accuracy" class="value">—</div></div>
+    </div>
+    <div style="height:10px"></div>
+    <button id="reset">Reiniciar estadísticas</button>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 8px">Últimas señales</h3>
+    <table>
+      <thead><tr><th>Hora</th><th>Señal</th><th>Conf.</th><th>Resultado</th></tr></thead>
+      <tbody id="history"><tr><td colspan="4" class="small">Sin señales cerradas todavía.</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card note">
+    <strong>Cómo interpreta V5 PRO:</strong><br>
+    🟢 LONG = varias señales alcistas coinciden. 🔴 SHORT = varias señales bajistas coinciden.
+    🟡 ESPERAR = señales débiles o contradictorias.<br><br>
+    El Stop Loss y Take Profit se adaptan a la volatilidad reciente mediante ATR. El sistema busca mantener aproximadamente 1:2 de riesgo/beneficio. La confianza es una puntuación del modelo, no una probabilidad garantizada.
+    El simulador es educativo y no coloca órdenes.
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const API="https://api.binance.com/api/v3";
+const WS="wss://stream.binance.com:9443/ws/btcusdt@kline_15m";
+const $=id=>document.getElementById(id);
+const fmt=n=>Number.isFinite(n) ? "$"+n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}) : "—";
+const num=n=>Number.isFinite(n) ? n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}) : "—";
+
+let bars=[], liveBar=null, ws=null, lastSignal=null, lastSignalKey="";
+let stats=JSON.parse(localStorage.getItem("btcV5Stats")||'{"wins":0,"losses":0,"closed":0,"history":[]}');
+let lastAnalysis=0;
+
+function setConnection(text, type=""){
+  $("connection").textContent=text;
+  $("dot").className="dot "+type;
+}
+
+async function getJSON(url){
+  const r=await fetch(url,{cache:"no-store"});
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+}
+
+async function loadData(){
+  setConnection("Descargando datos de Binance…");
+  try{
+    const data=await getJSON(API+"/klines?symbol=BTCUSDT&interval=15m&limit=160");
+    bars=data.map(k=>({
+      t:+k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5],ct:+k[6]
+    }));
+    liveBar=bars[bars.length-1];
+    setConnection("Conectado a Binance • datos en tiempo real","ok");
+    analyze();
+  }catch(e){
+    setConnection("No se pudo conectar con Binance • reintentando…","bad");
+    $("reason").textContent="No hay datos en este momento. Reintentando automáticamente.";
+  }
+}
+
+function ema(values, period){
+  if(values.length<period) return NaN;
+  let e=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
+  const k=2/(period+1);
+  for(let i=period;i<values.length;i++) e=values[i]*k+e*(1-k);
+  return e;
+}
+function rsi(values,period=14){
+  if(values.length<period+1) return NaN;
+  let gain=0,loss=0;
+  for(let i=1;i<=period;i++){
+    const d=values[i]-values[i-1];
+    if(d>=0) gain+=d; else loss-=d;
+  }
+  let ag=gain/period, al=loss/period;
+  for(let i=period+1;i<values.length;i++){
+    const d=values[i]-values[i-1],g=Math.max(d,0),l=Math.max(-d,0);
+    ag=(ag*(period-1)+g)/period;
+    al=(al*(period-1)+l)/period;
+  }
+  if(al===0) return 100;
+  return 100-100/(1+ag/al);
+}
+function atr(data,period=14){
+  if(data.length<period+1) return NaN;
+  const tr=[];
+  for(let i=1;i<data.length;i++){
+    const x=data[i],p=data[i-1];
+    tr.push(Math.max(x.h-x.l,Math.abs(x.h-p.c),Math.abs(x.l-p.c)));
+  }
+  let a=tr.slice(0,period).reduce((s,x)=>s+x,0)/period;
+  for(let i=period;i<tr.length;i++) a=(a*(period-1)+tr[i])/period;
+  return a;
+}
+function vwap(data,lookback=48){
+  const d=data.slice(-lookback);
+  let pv=0,v=0;
+  for(const x of d){pv+=((x.h+x.l+x.c)/3)*x.v;v+=x.v;}
+  return v?pv/v:NaN;
+}
+function relVolume(data){
+  if(data.length<21) return NaN;
+  const recent=data[data.length-1].v;
+  const avg=data.slice(-21,-1).reduce((s,x)=>s+x.v,0)/20;
+  return avg?recent/avg:NaN;
+}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+
+function getSnapshot(){
+  const d=[...bars];
+  if(liveBar && d.length && liveBar.t===d[d.length-1].t) d[d.length-1]=liveBar;
+  return d;
+}
+
+function analyze(){
+  const d=getSnapshot();
+  if(d.length<40) return;
+  const closes=d.map(x=>x.c), price=closes.at(-1);
+  const e9=ema(closes,9),e21=ema(closes,21),r=rsi(closes),a=atr(d),vw=vwap(d),rv=relVolume(d);
+  const momentum=((price-closes.at(-5))/closes.at(-5))*100;
+  const b=d.at(-1);
+  const range=Math.max(b.h-b.l,0.01);
+  const body=b.c-b.o;
+  const bodyPct=Math.abs(body)/range;
+  const elapsed=Date.now()-b.t;
+  const total=15*60*1000;
+  const progress=clamp(elapsed/total,0,1);
+  const remaining=Math.max(0,b.ct-Date.now());
+  const phase=progress<.20?"MUY TEMPRANA":progress<.50?"TEMPRANA":progress<.80?"MEDIA":"FINAL";
+
+  // Anticipation: score trend + location + momentum + RSI + candle pressure.
+  let bull=0,bear=0, reasons=[];
+  if(e9>e21){bull+=2;reasons.push("EMA 9 > EMA 21")} else {bear+=2;reasons.push("EMA 9 < EMA 21")}
+  if(price>vw){bull+=1.5;reasons.push("precio sobre VWAP")} else {bear+=1.5;reasons.push("precio bajo VWAP")}
+  if(r>55){bull+=1.5;reasons.push("RSI alcista")} else if(r<45){bear+=1.5;reasons.push("RSI bajista")}
+  if(momentum>0.04){bull+=1.5;reasons.push("momentum positivo")} else if(momentum<-0.04){bear+=1.5;reasons.push("momentum negativo")}
+  if(body>0 && bodyPct>.35){bull+=1} else if(body<0 && bodyPct>.35){bear+=1}
+  if(rv>1.15){bull += body>0?.5:0; bear += body<0?.5:0;}
+
+  const maxScore=8;
+  const diff=Math.abs(bull-bear);
+  let direction=diff>=2.5?(bull>bear?"LONG":"SHORT"):"WAIT";
+
+  // Avoid late chasing: near the end, require stronger agreement.
+  if(progress>.78 && diff<3.5) direction="WAIT";
+
+  // Early mode: allow signal only after enough data, but don't wait for a huge candle.
+  const confidence=clamp(50+diff*8+(progress<.5?4:0),0,94);
+  const minConf=direction==="WAIT"?0:progress<.50?64:68;
+  if(direction!=="WAIT" && confidence<minConf) direction="WAIT";
+
+  // Dynamic risk based on ATR. Cap extreme values to prevent absurd stops.
+  const atrPct=a/price;
+  const stopDist=clamp(a*1.15,price*0.0010,price*0.0080);
+  const entry=price;
+  const sl=direction==="LONG"?entry-stopDist:direction==="SHORT"?entry+stopDist:NaN;
+  const tp=direction==="LONG"?entry+stopDist*2:direction==="SHORT"?entry-stopDist*2:NaN;
+
+  let reason;
+  if(direction==="LONG") reason="Confluencia alcista: "+reasons.filter(x=>["EMA 9 > EMA 21","precio sobre VWAP","RSI alcista","momentum positivo"].includes(x)).slice(0,3).join(" • ");
+  else if(direction==="SHORT") reason="Confluencia bajista: "+reasons.filter(x=>["EMA 9 < EMA 21","precio bajo VWAP","RSI bajista","momentum negativo"].includes(x)).slice(0,3).join(" • ");
+  else reason="Las señales todavía no están suficientemente alineadas. V5 PRO evita entrar por impulso.";
+
+  const snap={direction,confidence,entry,sl,tp,e9,e21,r,vw,momentum,rv,a,phase,progress,remaining,reason,barTime:b.t};
+  render(snap);
+  lastSignal=snap;
+  lastAnalysis=Date.now();
+}
+
+function render(s){
+  $("price").textContent=fmt(s.entry);
+  $("open").textContent=fmt(liveBar?.o ?? bars.at(-1)?.o);
+  $("high").textContent=fmt(liveBar?.h ?? bars.at(-1)?.h);
+  $("low").textContent=fmt(liveBar?.l ?? bars.at(-1)?.l);
+  $("estimated").textContent=fmt(estimateClose(s));
+  $("ema9").textContent=fmt(s.e9);
+  $("ema21").textContent=fmt(s.e21);
+  $("rsi").textContent=num(s.r);
+  $("vwap").textContent=fmt(s.vw);
+  $("momentum").textContent=(s.momentum>=0?"+":"")+s.momentum.toFixed(3)+"%";
+  $("atr").textContent=fmt(s.a)+" ("+(s.a/s.entry*100).toFixed(3)+"%)";
+  $("volumeRel").textContent=Number.isFinite(s.rv)?s.rv.toFixed(2)+"x":"—";
+  $("phase").textContent=s.phase;
+  $("entry").textContent=s.direction==="WAIT"?"—":fmt(s.entry);
+  $("sl").textContent=s.direction==="WAIT"?"—":fmt(s.sl);
+  $("tp").textContent=s.direction==="WAIT"?"—":fmt(s.tp);
+  $("rr").textContent=s.direction==="WAIT"?"—":"1 : 2";
+  $("confidence").textContent=s.direction==="WAIT"?"—":Math.round(s.confidence)+"%";
+  $("bias").textContent=s.direction==="LONG"?"ALCISTA":s.direction==="SHORT"?"BAJISTA":"MIXTO";
+  $("early").textContent=s.direction==="WAIT"?"Esperando confirmación":(s.progress<.5?"Sí • señal anticipada":"Sí • confirmada");
+  $("updated").textContent=new Date().toLocaleTimeString();
+
+  const card=$("signalCard");
+  card.className="card signal "+(s.direction==="LONG"?"green":s.direction==="SHORT"?"red":"yellow");
+  $("light").textContent=s.direction==="LONG"?"🟢":s.direction==="SHORT"?"🔴":"🟡";
+  $("signalTitle").textContent=s.direction==="LONG"?"LONG":s.direction==="SHORT"?"SHORT":"ESPERAR";
+  $("reason").textContent=s.reason;
+  updateCountdown(s.remaining);
+}
+
+function estimateClose(s){
+  const b=liveBar||bars.at(-1);
+  if(!b) return NaN;
+  const elapsed=Math.max(Date.now()-b.t,1);
+  const rate=(b.c-b.o)/elapsed;
+  const remaining=Math.max(b.ct-Date.now(),0);
+  return b.c+rate*remaining;
+}
+function updateCountdown(ms){
+  const sec=Math.max(0,Math.floor(ms/1000));
+  $("countdown").textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
+}
+
+function connectWS(){
+  try{
+    ws=new WebSocket(WS);
+    ws.onopen=()=>setConnection("Conectado a Binance • tiempo real","ok");
+    ws.onmessage=e=>{
+      const k=JSON.parse(e.data).k;
+      liveBar={t:+k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c,v:+k.v,ct:+k.T};
+      const idx=bars.findIndex(x=>x.t===liveBar.t);
+      if(idx>=0) bars[idx]=liveBar; else {bars.push(liveBar);bars=bars.slice(-160);}
+      analyze();
+      if(k.x) evaluateClosedBar();
+    };
+    ws.onerror=()=>setConnection("WebSocket con problema • usando datos de respaldo","bad");
+    ws.onclose=()=>setTimeout(connectWS,3000);
+  }catch(e){setTimeout(connectWS,3000)}
+}
+
+function saveStats(){localStorage.setItem("btcV5Stats",JSON.stringify(stats));}
+function evaluateClosedBar(){
+  // The simulator records the direction of the last sufficiently confident signal.
+  if(!lastSignal || lastSignal.direction==="WAIT") return;
+  const closed=bars.find(x=>x.t===lastSignal.barTime);
+  if(!closed) return;
+  const result=lastSignal.direction==="LONG" ? (closed.c>closed.o?"WIN":"LOSS") : (closed.c<closed.o?"WIN":"LOSS");
+  stats.closed++;
+  if(result==="WIN") stats.wins++; else stats.losses++;
+  stats.history.unshift({time:new Date(closed.ct).toLocaleTimeString(),signal:lastSignal.direction,conf:Math.round(lastSignal.confidence),result});
+  stats.history=stats.history.slice(0,12);
+  saveStats(); renderStats();
+}
+function renderStats(){
+  $("wins").textContent=stats.wins;
+  $("losses").textContent=stats.losses;
+  $("closed").textContent=stats.closed;
+  $("accuracy").textContent=stats.closed?Math.round(stats.wins/stats.closed*100)+"%":"—";
+  $("history").innerHTML=stats.history.length?stats.history.map(x=>`<tr><td>${x.time}</td><td class="${x.signal==="LONG"?"pos":"neg"}">${x.signal}</td><td>${x.conf}%</td><td class="${x.result==="WIN"?"pos":"neg"}">${x.result}</td></tr>`).join(""):'<tr><td colspan="4" class="small">Sin señales cerradas todavía.</td></tr>';
+}
+
+$("refresh").onclick=loadData;
+$("reset").onclick=()=>{if(confirm("¿Reiniciar las estadísticas del simulador?")){stats={wins:0,losses:0,closed:0,history:[]};saveStats();renderStats();}};
+renderStats();
+
+setInterval(()=>{
+  if(lastSignal) updateCountdown(Math.max(0,(liveBar?.ct||0)-Date.now()));
+  if(Date.now()-lastAnalysis>2500) analyze();
+},1000);
+
+loadData();
+connectWS();
+</script>
+</body>
+</html>
