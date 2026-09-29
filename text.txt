@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>₿ BTC 15-Min PRO V5</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  background:#080b10;
+  color:#f2f4f7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+
+.app{
+  width:100%;
+  max-width:520px;
+  margin:auto;
+  padding:14px;
+}
+
+.header{
+  text-align:center;
+  margin-bottom:12px;
+}
+
+.header h1{
+  margin:0;
+  font-size:24px;
+  font-weight:800;
+}
+
+.header p{
+  margin:4px 0 0;
+  color:#8d96a3;
+  font-size:12px;
+}
+
+.status{
+  border:1px solid #242b35;
+  background:#10151c;
+  border-radius:14px;
+  padding:10px 12px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.status-left{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#f0b90b;
+  flex:none;
+}
+
+.dot.ok{
+  background:#18c964;
+}
+
+.dot.bad{
+  background:#ff4d4f;
+}
+
+.status-text{
+  font-size:13px;
+  font-weight:700;
+}
+
+.source{
+  color:#8993a1;
+  font-size:10px;
+  text-align:right;
+}
+
+.signal{
+  border-radius:20px;
+  padding:22px 12px;
+  text-align:center;
+  margin-bottom:12px;
+  border:2px solid #3a414c;
+  background:#141922;
+}
+
+.signal-icon{
+  font-size:54px;
+  line-height:1;
+  margin-bottom:8px;
+}
+
+.signal-title{
+  font-size:31px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+.signal-sub{
+  margin-top:7px;
+  color:#aeb6c2;
+  font-size:13px;
+}
+
+.green{
+  border-color:#18c964;
+  background:rgba(24,201,100,.08);
+}
+
+.green .signal-title{
+  color:#20e56f;
+}
+
+.red{
+  border-color:#ff4d4f;
+  background:rgba(255,77,79,.08);
+}
+
+.red .signal-title{
+  color:#ff6467;
+}
+
+.yellow{
+  border-color:#e7b91c;
+  background:rgba(231,185,28,.07);
+}
+
+.yellow .signal-title{
+  color:#f1ca32;
+}
+
+.card{
+  background:#10151c;
+  border:1px solid #242b35;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:12px;
+}
+
+.card-title{
+  color:#929ba8;
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  margin-bottom:12px;
+}
+
+.price{
+  font-size:31px;
+  font-weight:900;
+  text-align:center;
+  margin-bottom:4px;
+}
+
+.countdown{
+  text-align:center;
+  color:#f0b90b;
+  font-size:14px;
+  font-weight:800;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.metric{
+  background:#0b0f14;
+  border-radius:11px;
+  padding:10px;
+  min-height:63px;
+}
+
+.metric-label{
+  color:#737d8b;
+  font-size:10px;
+  margin-bottom:5px;
+}
+
+.metric-value{
+  font-size:15px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.trade-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+}
+
+.trade{
+  background:#0b0f14;
+  border-radius:11px;
+  padding:11px 7px;
+  text-align:center;
+}
+
+.trade-label{
+  color:#737d8b;
+  font-size:10px;
+  margin-bottom:6px;
+}
+
+.trade-value{
+  font-size:14px;
+  font-weight:900;
+}
+
+.confidence{
+  height:12px;
+  background:#202630;
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:9px;
+}
+
+.confidence-bar{
+  height:100%;
+  width:0%;
+  border-radius:20px;
+  transition:width .35s ease;
+}
+
+.confidence-text{
+  text-align:center;
+  margin-top:8px;
+  font-size:13px;
+  font-weight:800;
+}
+
+.footer{
+  text-align:center;
+  color:#697382;
+  font-size:10px;
+  line-height:1.5;
+  padding:8px 5px 18px;
+}
+
+button{
+  width:100%;
+  border:0;
+  border-radius:12px;
+  padding:12px;
+  background:#202731;
+  color:white;
+  font-weight:800;
+  margin-top:8px;
+}
+
+.debug{
+  font-size:10px;
+  color:#66707e;
+  margin-top:8px;
+  text-align:center;
+  min-height:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <h1>₿ BTC 15-Min PRO V5</h1>
+    <p>Señal experimental · actualización automática cada 5 segundos</p>
+  </div>
+
+  <div class="status">
+    <div class="status-left">
+      <span id="statusDot" class="dot"></span>
+      <span id="statusText" class="status-text">Iniciando conexión…</span>
+    </div>
+    <div id="sourceText" class="source">Buscando datos…</div>
+  </div>
+
+  <div id="signalBox" class="signal yellow">
+    <div id="signalIcon" class="signal-icon">🟡</div>
+    <div id="signalTitle" class="signal-title">ESPERAR</div>
+    <div id="signalSub" class="signal-sub">
+      Esperando datos reales del mercado…
+    </div>
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">Precio BTC/USDT</div>
+
+    <div id="price" class="price">--</div>
+
+    <div id="countdown" class="countdown">
+      Próximo cierre: --
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">Vela actual 15 minutos</div>
+
+    <div class="grid">
+
+      <div class="metric">
+        <div class="metric-label">APERTURA</div>
+        <div id="open" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">MÁXIMO</div>
+        <div id="high" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">MÍNIMO</div>
+        <div id="low" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">CIERRE ESTIMADO</div>
+        <div id="estimatedClose" class="metric-value">--</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">Indicadores</div>
+
+    <div class="grid">
+
+      <div class="metric">
+        <div class="metric-label">EMA 9</div>
+        <div id="ema9" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">EMA 21</div>
+        <div id="ema21" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">RSI 14</div>
+        <div id="rsi" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">VWAP</div>
+        <div id="vwap" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">MOMENTUM</div>
+        <div id="momentum" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">VOLUMEN RELATIVO</div>
+        <div id="relativeVolume" class="metric-value">--</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">Plan de operación experimental</div>
+
+    <div class="trade-grid">
+
+      <div class="trade">
+        <div class="trade-label">ENTRADA</div>
+        <div id="entry" class="trade-value">--</div>
+      </div>
+
+      <div class="trade">
+        <div class="trade-label">STOP LOSS</div>
+        <div id="sl" class="trade-value">--</div>
+      </div>
+
+      <div class="trade">
+        <div class="trade-label">TAKE PROFIT</div>
+        <div id="tp" class="trade-value">--</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">Confianza del modelo</div>
+
+    <div class="confidence">
+      <div id="confidenceBar" class="confidence-bar"></div>
+    </div>
+
+    <div id="confidenceText" class="confidence-text">
+      --
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-title">Estado técnico</div>
+
+    <div class="grid">
+
+      <div class="metric">
+        <div class="metric-label">TENDENCIA</div>
+        <div id="trend" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">MOMENTUM</div>
+        <div id="momentumState" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">RSI ESTADO</div>
+        <div id="rsiState" class="metric-value">--</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">SEÑAL INTERNA</div>
+        <div id="scoreState" class="metric-value">--</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <button id="refreshButton">
+    🔄 ACTUALIZAR AHORA
+  </button>
+
+  <div id="debug" class="debug"></div>
+
+  <div class="footer">
+    Datos de mercado públicos. Herramienta experimental.
+    No coloca órdenes automáticamente y la confianza NO representa
+    una probabilidad garantizada.
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   BTC 15-MIN PRO V5
+   CONEXIÓN MULTI-RUTA
+   ========================================================= */
+
+const SYMBOL = "BTCUSDT";
+const INTERVAL = "15m";
+const UPDATE_MS = 5000;
+
+/*
+  Varias rutas oficiales/compatibles.
+  El bot prueba una por una.
+*/
+const DATA_SOURCES = [
+
+  {
+    name:"BINANCE",
+    base:"https://api.binance.com"
+  },
+
+  {
+    name:"BINANCE 1",
+    base:"https://api1.binance.com"
+  },
+
+  {
+    name:"BINANCE 2",
+    base:"https://api2.binance.com"
+  },
+
+  {
+    name:"BINANCE 3",
+    base:"https://api3.binance.com"
+  },
+
+  {
+    name:"BINANCE DATA",
+    base:"https://data-api.binance.vision"
+  }
+
+];
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+
+let activeSource = 0;
+let candles = [];
+let latestPrice = null;
+let lastUpdate = 0;
+let updateBusy = false;
+let retryTimer = null;
+let consecutiveFailures = 0;
+
+/* =========================================================
+   DOM
+   ========================================================= */
+
+const $ = id => document.getElementById(id);
+
+const el = {
+  statusDot:$("statusDot"),
+  statusText:$("statusText"),
+  sourceText:$("sourceText"),
+
+  signalBox:$("signalBox"),
+  signalIcon:$("signalIcon"),
+  signalTitle:$("signalTitle"),
+  signalSub:$("signalSub"),
+
+  price:$("price"),
+  countdown:$("countdown"),
+
+  open:$("open"),
+  high:$("high"),
+  low:$("low"),
+  estimatedClose:$("estimatedClose"),
+
+  ema9:$("ema9"),
+  ema21:$("ema21"),
+  rsi:$("rsi"),
+  vwap:$("vwap"),
+  momentum:$("momentum"),
+  relativeVolume:$("relativeVolume"),
+
+  entry:$("entry"),
+  sl:$("sl"),
+  tp:$("tp"),
+
+  confidenceBar:$("confidenceBar"),
+  confidenceText:$("confidenceText"),
+
+  trend:$("trend"),
+  momentumState:$("momentumState"),
+  rsiState:$("rsiState"),
+  scoreState:$("scoreState"),
+
+  debug:$("debug"),
+  refreshButton:$("refreshButton")
+};
+
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+
+function sleep(ms){
+  return new Promise(resolve => setTimeout(resolve,ms));
+}
+
+function fmtPrice(value){
+
+  if(!Number.isFinite(value)) return "--";
+
+  return "$" + value.toLocaleString("en-US",{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+function fmt(value,digits=2){
+
+  if(!Number.isFinite(value)) return "--";
+
+  return value.toLocaleString("en-US",{
+    minimumFractionDigits:digits,
+    maximumFractionDigits:digits
+  });
+}
+
+function setStatus(text,ok=true,source=""){
+
+  el.statusText.textContent = text;
+  el.sourceText.textContent = source;
+
+  el.statusDot.className = "dot " + (ok ? "ok" : "bad");
+}
+
+function setDebug(text){
+  el.debug.textContent = text || "";
+}
+
+/* =========================================================
+   FETCH CON TIMEOUT
+   ========================================================= */
+
+async function fetchJSON(url,timeout=4500){
+
+  const controller = new AbortController();
+
+  const timer = setTimeout(
+    () => controller.abort(),
+    timeout
+  );
+
+  try{
+
+    const response = await fetch(
+      url + (url.includes("?") ? "&" : "?") + "_=" + Date.now(),
+      {
+        method:"GET",
+        cache:"no-store",
+        signal:controller.signal,
+        headers:{
+          "Accept":"application/json"
+        }
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("HTTP " + response.status);
+    }
+
+    return await response.json();
+
+  }finally{
+
+    clearTimeout(timer);
+
+  }
+
+}
+
+/* =========================================================
+   OBTENER KLINES
+   ========================================================= */
+
+async function getKlinesFromSource(source){
+
+  const url =
+    source.base +
+    "/api/v3/klines" +
+    "?symbol=" + SYMBOL +
+    "&interval=" + INTERVAL +
+    "&limit=150";
+
+  const data = await fetchJSON(url);
+
+  if(!Array.isArray(data) || data.length < 30){
+    throw new Error("Velas insuficientes");
+  }
+
+  return data.map(k => ({
+    time:Number(k[0]),
+    open:Number(k[1]),
+    high:Number(k[2]),
+    low:Number(k[3]),
+    close:Number(k[4]),
+    volume:Number(k[5]),
+    closeTime:Number(k[6]),
+    quoteVolume:Number(k[7])
+  }));
+
+}
+
+/* =========================================================
+   OBTENER PRECIO
+   ========================================================= */
+
+async function getPriceFromSource(source){
+
+  const url =
+    source.base +
+    "/api/v3/ticker/price" +
+    "?symbol=" + SYMBOL;
+
+  const data = await fetchJSON(url);
+
+  const price = Number(data.price);
+
+  if(!Number.isFinite(price)){
+    throw new Error("Precio inválido");
+  }
+
+  return price;
+}
+
+/* =========================================================
+   OBTENER DATOS CON FAILOVER
+   ========================================================= */
+
+async function getMarketData(){
+
+  const total = DATA_SOURCES.length;
+
+  /*
+    Primero intentamos la fuente activa.
+    Después recorremos las demás.
+  */
+
+  for(let offset=0; offset<total; offset++){
+
+    const index =
+      (activeSource + offset) % total;
+
+    const source = DATA_SOURCES[index];
+
+    try{
+
+      const [ks,price] = await Promise.all([
+        getKlinesFromSource(source),
+        getPriceFromSource(source)
+      ]);
+
+      activeSource = index;
+
+      return {
+        source:source.name,
+        candles:ks,
+        price
+      };
+
+    }catch(error){
+
+      console.warn(
+        "Fuente falló:",
+        source.name,
+        error
+      );
+
+    }
+
+  }
+
+  throw new Error(
+    "Todas las fuentes de mercado fallaron"
+  );
+}
+
+/* =========================================================
+   EMA
+   ========================================================= */
+
+function calculateEMA(values,period){
+
+  if(values.length < period) return null;
+
+  const multiplier = 2/(period+1);
+
+  let ema =
+    values
+      .slice(0,period)
+      .reduce((a,b)=>a+b,0)/period;
+
+  for(let i=period;i<values.length;i++){
+
+    ema =
+      (values[i]-ema)*multiplier + ema;
+
+  }
+
+  return ema;
+}
+
+/* =========================================================
+   RSI
+   ========================================================= */
+
+function calculateRSI(values,period=14){
+
+  if(values.length < period+1) return null;
+
+  let gains=0;
+  let losses=0;
+
+  for(let i=1;i<=period;i++){
+
+    const diff =
+      values[i]-values[i-1];
+
+    if(diff>=0) gains+=diff;
+    else losses+=Math.abs(diff);
+
+  }
+
+  let avgGain=gains/period;
+  let avgLoss=losses/period;
+
+  for(let i=period+1;i<values.length;i++){
+
+    const diff =
+      values[i]-values[i-1];
+
+    const gain =
+      diff>0 ? diff : 0;
+
+    const loss =
+      diff<0 ? Math.abs(diff) : 0;
+
+    avgGain =
+      ((avgGain*(period-1))+gain)/period;
+
+    avgLoss =
+      ((avgLoss*(period-1))+loss)/period;
+
+  }
+
+  if(avgLoss===0) return 100;
+
+  const rs=avgGain/avgLoss;
+
+  return 100-(100/(1+rs));
+}
+
+/* =========================================================
+   VWAP
+   ========================================================= */
+
+function calculateVWAP(data){
+
+  let cumulativePV=0;
+  let cumulativeVolume=0;
+
+  for(const c of data){
+
+    const typical =
+      (c.high+c.low+c.close)/3;
+
+    cumulativePV +=
+      typical*c.volume;
+
+    cumulativeVolume += c.volume;
+
+  }
+
+  if(cumulativeVolume===0) return null;
+
+  return cumulativePV/cumulativeVolume;
+}
+
+/* =========================================================
+   MOMENTUM
+   ========================================================= */
+
+function calculateMomentum(values,lookback=5){
+
+  if(values.length <= lookback) return 0;
+
+  const old =
+    values[values.length-1-lookback];
+
+  const current =
+    values[values.length-1];
+
+  if(!old) return 0;
+
+  return ((current-old)/old)*100;
+}
+
+/* =========================================================
+   VOLUMEN RELATIVO
+   ========================================================= */
+
+function calculateRelativeVolume(data){
+
+  if(data.length<21) return 1;
+
+  const current =
+    data[data.length-1].volume;
+
+  const previous =
+    data
+      .slice(data.length-21,data.length-1)
+      .map(x=>x.volume);
+
+  const avg =
+    previous.reduce((a,b)=>a+b,0) /
+    previous.length;
+
+  if(!avg) return 1;
+
+  return current/avg;
+}
+
+/* =========================================================
+   ESTIMACIÓN DE CIERRE
+   ========================================================= */
+
+function estimateClose(candle,price){
+
+  const elapsed =
+    Date.now()-candle.time;
+
+  const duration =
+    15*60*1000;
+
+  if(elapsed<=0) return price;
+
+  const progress =
+    Math.min(
+      Math.max(elapsed/duration,0.05),
+      0.95
+    );
+
+  /*
+    Proyección moderada:
+    no extrapolamos exageradamente el movimiento.
+  */
+
+  const movement =
+    price-candle.open;
+
+  const projected =
+    candle.open +
+    movement/progress;
+
+  const maxProjection =
+    candle.open +
+    movement*2.2;
+
+  const minProjection =
+    candle.open +
+    movement*2.2;
+
+  if(movement>0){
+    return Math.min(
+      projected,
+      maxProjection
+    );
+  }
+
+  if(movement<0){
+    return Math.max(
+      projected,
+      minProjection
+    );
+  }
+
+  return price;
+}
+
+/* =========================================================
+   SEÑAL V5
+   ========================================================= */
+
+function calculateSignal(data){
+
+  const closes =
+    data.map(c=>c.close);
+
+  const ema9 =
+    calculateEMA(closes,9);
+
+  const ema21 =
+    calculateEMA(closes,21);
+
+  const rsi =
+    calculateRSI(closes,14);
+
+  const vwap =
+    calculateVWAP(data);
+
+  const momentum =
+    calculateMomentum(closes,5);
+
+  const relativeVolume =
+    calculateRelativeVolume(data);
+
+  const current =
+    closes[closes.length-1];
+
+  let score=0;
+
+  /*
+    Tendencia EMA
+  */
+
+  if(ema9>ema21) score+=2;
+  if(ema9<ema21) score-=2;
+
+  /*
+    Precio vs VWAP
+  */
+
+  if(current>vwap) score+=1;
+  if(current<vwap) score-=1;
+
+  /*
+    RSI
+  */
+
+  if(rsi>=55 && rsi<=72) score+=2;
+  if(rsi<=45 && rsi>=28) score-=2;
+
+  /*
+    Momentum
+  */
+
+  if(momentum>0.10) score+=2;
+  if(momentum<-0.10) score-=2;
+
+  /*
+    Volumen
+  */
+
+  if(relativeVolume>=1.15){
+
+    if(score>0) score+=1;
+    if(score<0) score-=1;
+
+  }
+
+  /*
+    Señal
+  */
+
+  let signal="WAIT";
+
+  if(score>=5) signal="UP";
+  else if(score<=-5) signal="DOWN";
+
+  /*
+    Evitar señales demasiado tempranas
+    cuando los indicadores están divididos.
+  */
+
+  const bullish =
+    ema9>ema21 &&
+    current>vwap &&
+    momentum>0;
+
+  const bearish =
+    ema9<ema21 &&
+    current<vwap &&
+    momentum<0;
+
+  if(signal==="UP" && !bullish){
+    signal="WAIT";
+  }
+
+  if(signal==="DOWN" && !bearish){
+    signal="WAIT";
+  }
+
+  /*
+    Confianza.
+    No es probabilidad real.
+  */
+
+  const confidence =
+    Math.min(
+      96,
+      Math.max(
+        38,
+        50 + Math.abs(score)*7
+      )
+    );
+
+  return {
+    signal,
+    score,
+    confidence,
+    ema9,
+    ema21,
+    rsi,
+    vwap,
+    momentum,
+    relativeVolume
+  };
+
+}
+
+/* =========================================================
+   ENTRADA / SL / TP
+   ========================================================= */
+
+function calculateTrade(signal,price,data){
+
+  const recent =
+    data.slice(-10);
+
+  const high =
+    Math.max(...recent.map(c=>c.high));
+
+  const low =
+    Math.min(...recent.map(c=>c.low));
+
+  /*
+    Volatilidad aproximada
+  */
+
+  const ranges =
+    recent.map(c=>c.high-c.low);
+
+  const avgRange =
+    ranges.reduce((a,b)=>a+b,0) /
+    ranges.length;
+
+  const distance =
+    Math.max(
+      avgRange*0.8,
+      price*0.0012
+    );
+
+  let entry=price;
+  let sl=null;
+  let tp=null;
+
+  if(signal==="UP"){
+
+    sl =
+      Math.min(
+        price-distance,
+        low
+      );
+
+    tp =
+      price + distance*1.5;
+
+  }
+
+  if(signal==="DOWN"){
+
+    sl =
+      Math.max(
+        price+distance,
+        high
+      );
+
+    tp =
+      price-distance*1.5;
+
+  }
+
+  return {
+    entry,
+    sl,
+    tp
+  };
+
+}
+
+/* =========================================================
+   ACTUALIZAR INTERFAZ
+   ========================================================= */
+
+function updateUI(market){
+
+  const data =
+    market.candles;
+
+  const price =
+    market.price;
+
+  latestPrice=price;
+  candles=data;
+
+  const current =
+    data[data.length-1];
+
+  const result =
+    calculateSignal(data);
+
+  const trade =
+    calculateTrade(
+      result.signal,
+      price,
+      data
+    );
+
+  /*
+    PRECIO
+  */
+
+  el.price.textContent =
+    fmtPrice(price);
+
+  /*
+    VELA
+  */
+
+  el.open.textContent =
+    fmtPrice(current.open);
+
+  el.high.textContent =
+    fmtPrice(current.high);
+
+  el.low.textContent =
+    fmtPrice(current.low);
+
+  const estimated =
+    estimateClose(current,price);
+
+  el.estimatedClose.textContent =
+    fmtPrice(estimated);
+
+  /*
+    CUENTA REGRESIVA
+  */
+
+  updateCountdown(current.closeTime);
+
+  /*
+    INDICADORES
+  */
+
+  el.ema9.textContent =
+    fmtPrice(result.ema9);
+
+  el.ema21.textContent =
+    fmtPrice(result.ema21);
+
+  el.rsi.textContent =
+    fmt(result.rsi,1);
+
+  el.vwap.textContent =
+    fmtPrice(result.vwap);
+
+  el.momentum.textContent =
+    (result.momentum>=0?"+":"") +
+    fmt(result.momentum,3) +
+    "%";
+
+  el.relativeVolume.textContent =
+    fmt(result.relativeVolume,2) + "x";
+
+  /*
+    PLAN
+  */
+
+  el.entry.textContent =
+    fmtPrice(trade.entry);
+
+  el.sl.textContent =
+    trade.sl ?
+    fmtPrice(trade.sl) :
+    "--";
+
+  el.tp.textContent =
+    trade.tp ?
+    fmtPrice(trade.tp) :
+    "--";
+
+  /*
+    ESTADOS
+  */
+
+  el.trend.textContent =
+    result.ema9>result.ema21
+    ? "ALCISTA"
+    : result.ema9<result.ema21
+    ? "BAJISTA"
+    : "NEUTRA";
+
+  el.momentumState.textContent =
+    result.momentum>0.10
+    ? "POSITIVO"
+    : result.momentum<-0.10
+    ? "NEGATIVO"
+    : "DÉBIL";
+
+  el.rsiState.textContent =
+    result.rsi>=70
+    ? "SOBRECOMPRA"
+    : result.rsi<=30
+    ? "SOBREVENTA"
+    : result.rsi>=50
+    ? "ALCISTA"
+    : "BAJISTA";
+
+  el.scoreState.textContent =
+    result.score>0
+    ? "+"+result.score
+    : result.score;
+
+  /*
+    SEÑAL VISUAL
+  */
+
+  el.signalBox.className =
+    "signal " +
+    (
+      result.signal==="UP"
+      ? "green"
+      : result.signal==="DOWN"
+      ? "red"
+      : "yellow"
+    );
+
+  if(result.signal==="UP"){
+
+    el.signalIcon.textContent="🟢";
+    el.signalTitle.textContent="SUBE";
+
+    el.signalSub.textContent =
+      "Condiciones alcistas confirmadas";
+
+  }
+  else if(result.signal==="DOWN"){
+
+    el.signalIcon.textContent="🔴";
+    el.signalTitle.textContent="BAJA";
+
+    el.signalSub.textContent =
+      "Condiciones bajistas confirmadas";
+
+  }
+  else{
+
+    el.signalIcon.textContent="🟡";
+    el.signalTitle.textContent="ESPERAR";
+
+    el.signalSub.textContent =
+      "Indicadores insuficientes o contradictorios";
+
+  }
+
+  /*
+    CONFIANZA
+  */
+
+  el.confidenceBar.style.width =
+    result.confidence + "%";
+
+  el.confidenceText.textContent =
+    result.confidence +
+    "% · puntuación del modelo";
+
+  /*
+    DEBUG
+  */
+
+  setDebug(
+    "Última actualización: " +
+    new Date().toLocaleTimeString()
+  );
+
+}
+
+/* =========================================================
+   COUNTDOWN
+   ========================================================= */
+
+function updateCountdown(closeTime){
+
+  if(!closeTime){
+    el.countdown.textContent =
+      "Próximo cierre: --";
+    return;
+  }
+
+  const remaining =
+    Math.max(
+      0,
+      closeTime-Date.now()
+    );
+
+  const seconds =
+    Math.floor(remaining/1000);
+
+  const minutes =
+    Math.floor(seconds/60);
+
+  const secs =
+    seconds%60;
+
+  el.countdown.textContent =
+    "Cierre de vela: " +
+    String(minutes).padStart(2,"0") +
+    ":" +
+    String(secs).padStart(2,"0");
+
+}
+
+/* =========================================================
+   ACTUALIZACIÓN PRINCIPAL
+   ========================================================= */
+
+async function updateBot(){
+
+  if(updateBusy) return;
+
+  updateBusy=true;
+
+  try{
+
+    setStatus(
+      lastUpdate===0
+      ? "Conectando…"
+      : "Actualizando datos…",
+      true,
+      DATA_SOURCES[activeSource].name
+    );
+
+    const market =
+      await getMarketData();
+
+    updateUI(market);
+
+    lastUpdate=Date.now();
+    consecutiveFailures=0;
+
+    setStatus(
+      "● CONECTADO",
+      true,
+      market.source
+    );
+
+  }catch(error){
+
+    consecutiveFailures++;
+
+    console.error(error);
+
+    setStatus(
+      "Reintentando conexión…",
+      false,
+      "Intento " + consecutiveFailures
+    );
+
+    setDebug(
+      "No se pudo obtener mercado. Cambiando de fuente…"
+    );
+
+  }finally{
+
+    updateBusy=false;
+
+  }
+
+}
+
+/* =========================================================
+   RELOJ DE CUENTA REGRESIVA
+   ========================================================= */
+
+setInterval(()=>{
+
+  if(candles.length){
+
+    const current =
+      candles[candles.length-1];
+
+    updateCountdown(current.closeTime);
+
+  }
+
+},1000);
+
+/* =========================================================
+   ACTUALIZACIÓN CADA 5 SEGUNDOS
+   ========================================================= */
+
+setInterval(
+  updateBot,
+  UPDATE_MS
+);
+
+/* =========================================================
+   BOTÓN MANUAL
+   ========================================================= */
+
+el.refreshButton.addEventListener(
+  "click",
+  ()=>{
+    updateBot();
+  }
+);
+
+/* =========================================================
+   PRIMERA CARGA
+   ========================================================= */
+
+updateBot();
+
+</script>
+
+</body>
+</html>
