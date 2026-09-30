@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b10">
+<title>₿ BTC 15-Min PRO V5</title>
+<style>
+:root{
+  --bg:#080b10;--card:#11161e;--card2:#0b1017;--line:#27303b;
+  --text:#f3f5f7;--muted:#8d98a8;--green:#21d66b;--red:#ff4d58;--yellow:#ffd21a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:850px;margin:auto;padding:24px 18px 50px}
+h1{font-size:30px;margin:0;text-align:center;font-weight:800}
+.sub{text-align:center;color:var(--muted);font-size:16px;margin:12px 0 26px}
+.status{border:1px solid var(--line);background:#10151d;border-radius:24px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.statusLeft{display:flex;gap:12px;align-items:center}.dot{width:20px;height:20px;border-radius:50%;background:var(--yellow)}
+.status small{color:var(--muted);font-weight:500}
+.signal{margin-top:26px;border:4px solid var(--yellow);background:#171711;border-radius:38px;text-align:center;padding:38px 15px 34px}
+.signal .lamp{width:105px;height:105px;border-radius:50%;margin:auto auto 24px;background:var(--yellow);box-shadow:0 0 22px #ffd21a55}
+.signal.green{border-color:var(--green);background:#0c1711}.signal.green .lamp{background:var(--green);box-shadow:0 0 22px #21d66b55}
+.signal.red{border-color:var(--red);background:#170c0e}.signal.red .lamp{background:var(--red);box-shadow:0 0 22px #ff4d5855}
+.signal h2{font-size:48px;margin:0 0 10px}.signal p{font-size:18px;color:#aeb7c4;margin:0}
+.card{margin-top:24px;border:1px solid var(--line);background:var(--card);border-radius:28px;padding:24px}
+.label{font-size:19px;color:#9aa5b5;font-weight:800;letter-spacing:1.2px}
+.price{font-size:43px;font-weight:800;text-align:center;margin:28px 0 8px;font-variant-numeric:tabular-nums}
+.close{text-align:center;color:var(--yellow);font-size:20px;font-weight:800}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.box{background:var(--card2);border-radius:22px;padding:20px;min-height:105px}
+.box span{display:block;color:#8792a2;font-size:15px;margin-bottom:12px}.box b{font-size:23px;font-variant-numeric:tabular-nums}
+.trade{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.trade .box{min-height:95px}.greenText{color:var(--green)}.redText{color:var(--red)}.yellowText{color:var(--yellow)}
+.source{font-size:13px;color:var(--muted);margin-top:16px;text-align:center}
+.log{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#9da7b4;white-space:pre-wrap;line-height:1.5}
+button{border:1px solid var(--line);background:#171d26;color:white;border-radius:14px;padding:12px 16px;font-weight:700}
+.actions{display:flex;justify-content:center;gap:10px;margin-top:18px}
+@media(max-width:560px){main{padding:20px 14px 40px}h1{font-size:28px}.signal h2{font-size:43px}.grid{gap:12px}.box{padding:16px}.box b{font-size:19px}.trade{grid-template-columns:1fr}.price{font-size:38px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>₿ BTC 15-Min PRO V5</h1>
+  <div class="sub">Señal experimental · actualización automática cada 5 segundos</div>
+
+  <div class="status">
+    <div class="statusLeft"><span id="dot" class="dot"></span><span id="status">Iniciando conexión...</span></div>
+    <small id="attempt">Intento 1</small>
+  </div>
+
+  <section id="signal" class="signal">
+    <div class="lamp"></div>
+    <h2 id="signalText">ESPERAR</h2>
+    <p id="signalReason">Conectando con fuentes de mercado...</p>
+  </section>
+
+  <section class="card">
+    <div class="label">PRECIO BTC/USDT</div>
+    <div id="price" class="price">--</div>
+    <div id="countdown" class="close">Próximo cierre: --</div>
+  </section>
+
+  <section class="card">
+    <div class="label">VELA ACTUAL 15 MINUTOS</div>
+    <div class="grid">
+      <div class="box"><span>APERTURA</span><b id="open">--</b></div>
+      <div class="box"><span>MÁXIMO</span><b id="high">--</b></div>
+      <div class="box"><span>MÍNIMO</span><b id="low">--</b></div>
+      <div class="box"><span>CIERRE ESTIMADO</span><b id="estimate">--</b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="label">INDICADORES</div>
+    <div class="grid">
+      <div class="box"><span>EMA 9</span><b id="ema9">--</b></div>
+      <div class="box"><span>EMA 21</span><b id="ema21">--</b></div>
+      <div class="box"><span>RSI 14</span><b id="rsi">--</b></div>
+      <div class="box"><span>VWAP</span><b id="vwap">--</b></div>
+      <div class="box"><span>MOMENTUM</span><b id="momentum">--</b></div>
+      <div class="box"><span>VOLUMEN RELATIVO</span><b id="relvol">--</b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="label">ENTRADA / RIESGO / OBJETIVO</div>
+    <div class="trade">
+      <div class="box"><span>ENTRADA</span><b id="entry">--</b></div>
+      <div class="box"><span>STOP LOSS</span><b id="sl" class="redText">--</b></div>
+      <div class="box"><span>TAKE PROFIT</span><b id="tp" class="greenText">--</b></div>
+    </div>
+    <div class="box" style="margin-top:12px;text-align:center">
+      <span>CONFIANZA DEL MODELO</span><b id="confidence">--</b>
+    </div>
+    <div id="source" class="source">Fuente: --</div>
+  </section>
+
+  <section class="card">
+    <div class="label">DIAGNÓSTICO DE CONEXIÓN</div>
+    <div id="log" class="log">Esperando primera respuesta...</div>
+    <div class="actions"><button onclick="manualRefresh()">Actualizar ahora</button></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+/*
+ V5 PRO - conexión resistente
+ 1) Intenta varios endpoints directos de Binance.
+ 2) Si Binance no responde desde el navegador, prueba Bybit.
+ 3) No usa proxies públicos.
+ 4) Cada ciclo vuelve a pedir precio + velas + indicadores + señal.
+ 5) Actualiza cada 5 segundos.
+*/
+
+const BINANCE_BASES = [
+  "https://api.binance.com",
+  "https://api1.binance.com",
+  "https://api2.binance.com",
+  "https://api3.binance.com",
+  "https://data-api.binance.vision"
+];
+
+const BYBIT = "https://api.bybit.com";
+
+let candles = [];
+let sourceName = "";
+let busy = false;
+let attempt = 0;
+let lastGood = 0;
+
+const $ = id => document.getElementById(id);
+
+function fmt(n, d=2){
+  if(!Number.isFinite(n)) return "--";
+  return Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function fetchJSON(url, timeout=4500){
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(), timeout);
+  try{
+    const r = await fetch(url,{cache:"no-store",signal:ctl.signal,mode:"cors"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return await r.json();
+  }finally{clearTimeout(timer);}
+}
+
+function setStatus(text, color, n){
+  $("status").textContent=text;
+  $("dot").style.background=color;
+  if(n!=null) $("attempt").textContent="Intento "+n;
+}
+
+async function getBinance(){
+  let errors=[];
+  for(const base of BINANCE_BASES){
+    try{
+      const data=await fetchJSON(base+"/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=100",5000);
+      if(!Array.isArray(data)||data.length<30) throw new Error("datos insuficientes");
+      const ticker=await fetchJSON(base+"/api/v3/ticker/price?symbol=BTCUSDT",3500);
+      const price=Number(ticker.price);
+      if(!Number.isFinite(price)) throw new Error("precio inválido");
+      return {raw:data,price,source:"Binance · "+new URL(base).hostname};
+    }catch(e){errors.push(new URL(base).hostname+": "+e.message);}
+  }
+  throw new Error("Binance: "+errors.join(" | "));
+}
+
+async function getBybit(){
+  const u=BYBIT+"/v5/market/kline?category=linear&symbol=BTCUSDT&interval=15&limit=100";
+  const d=await fetchJSON(u,5500);
+  if(!d||d.retCode!==0||!d.result||!d.result.list||d.result.list.length<30)
+    throw new Error("Bybit datos insuficientes");
+  const rows=d.result.list.slice().reverse();
+  const raw=rows.map(x=>[
+    Number(x[0]),Number(x[1]),Number(x[2]),Number(x[3]),Number(x[4]),
+    Number(x[5]),Number(x[6]),Number(x[7])
+  ]);
+  const price=Number(raw[raw.length-1][4]);
+  return {raw,price,source:"Bybit · api.bybit.com"};
+}
+
+async function loadMarket(){
+  try{return await getBinance();}
+  catch(binanceError){
+    $("log").textContent="Binance no respondió. Probando fuente alternativa...\n"+binanceError.message;
+    try{return await getBybit();}
+    catch(bybitError){
+      throw new Error(binanceError.message+"\nBybit: "+bybitError.message);
+    }
+  }
+}
+
+function calculateEMA(values, period){
+  const k=2/(period+1);
+  let ema=values[0];
+  for(let i=1;i<values.length;i++) ema=values[i]*k+ema*(1-k);
+  return ema;
+}
+
+function calculateRSI(values, period=14){
+  if(values.length<=period) return NaN;
+  let gain=0,loss=0;
+  for(let i=1;i<=period;i++){
+    const d=values[i]-values[i-1];
+    if(d>=0) gain+=d; else loss-=d;
+  }
+  let avgGain=gain/period, avgLoss=loss/period;
+  for(let i=period+1;i<values.length;i++){
+    const d=values[i]-values[i-1];
+    const g=Math.max(0,d), l=Math.max(0,-d);
+    avgGain=(avgGain*(period-1)+g)/period;
+    avgLoss=(avgLoss*(period-1)+l)/period;
+  }
+  if(avgLoss===0) return 100;
+  return 100-(100/(1+avgGain/avgLoss));
+}
+
+function calculateVWAP(rows){
+  let pv=0,v=0;
+  for(const r of rows){
+    const high=Number(r[2]), low=Number(r[3]), close=Number(r[4]), vol=Number(r[5]);
+    const typical=(high+low+close)/3;
+    pv+=typical*vol; v+=vol;
+  }
+  return v?pv/v:NaN;
+}
+
+function calcRelativeVolume(rows){
+  if(rows.length<21) return NaN;
+  const vols=rows.slice(-21,-1).map(r=>Number(r[5]));
+  const avg=vols.reduce((a,b)=>a+b,0)/vols.length;
+  const current=Number(rows[rows.length-1][5]);
+  return avg?current/avg:NaN;
+}
+
+function calcMomentum(closes){
+  if(closes.length<5) return NaN;
+  return ((closes.at(-1)/closes.at(-5))-1)*100;
+}
+
+function estimateClose(open,current,elapsedMs){
+  // Estimación conservadora: extiende solo una fracción del movimiento actual.
+  const period=15*60*1000;
+  const elapsed=Math.min(Math.max(elapsedMs,1000),period-1000);
+  const progress=elapsed/period;
+  const move=current-open;
+  const projected=open+(move/Math.max(progress,0.12));
+  return open+(projected-open)*0.55;
+}
+
+function scoreSignal(m){
+  let score=0;
+  // Tendencia
+  if(m.ema9>m.ema21) score+=2;
+  if(m.ema9<m.ema21) score-=2;
+  // Precio vs EMA
+  if(m.price>m.ema9) score+=1;
+  if(m.price<m.ema9) score-=1;
+  // VWAP
+  if(m.price>m.vwap) score+=1;
+  if(m.price<m.vwap) score-=1;
+  // RSI, evitando perseguir extremos
+  if(m.rsi>=52 && m.rsi<=68) score+=1;
+  if(m.rsi<=48 && m.rsi>=32) score-=1;
+  // momentum
+  if(m.momentum>0.08) score+=1;
+  if(m.momentum<-0.08) score-=1;
+  // volumen
+  if(m.relvol>=1.15) score += score>0 ? 0.5 : (score<0 ? -0.5 : 0);
+  return score;
+}
+
+function makeSignal(m){
+  const score=scoreSignal(m);
+  const abs=Math.abs(score);
+  // Filtro de estabilidad: no dar señal si las piezas se contradicen.
+  let signal="WAIT", reason="Indicadores mixtos";
+  if(score>=4){
+    signal="UP"; reason="Tendencia y momentum alcistas";
+  }else if(score<=-4){
+    signal="DOWN"; reason="Tendencia y momentum bajistas";
+  }else if(score>=2.5){
+    signal="UP"; reason="Sesgo alcista, pero moderado";
+  }else if(score<=-2.5){
+    signal="DOWN"; reason="Sesgo bajista, pero moderado";
+  }
+  // Evitar perseguir una vela ya muy extendida.
+  const extension=((m.price-m.open)/m.open)*100;
+  if(signal==="UP" && extension>0.55){signal="WAIT";reason="Movimiento alcista ya muy extendido";}
+  if(signal==="DOWN" && extension<-0.55){signal="WAIT";reason="Movimiento bajista ya muy extendido";}
+  const confidence=Math.min(95,Math.round(50+abs*9));
+  return {signal,reason,confidence,score};
+}
+
+function render(m, sig){
+  $("price").textContent="$"+fmt(m.price,2);
+  $("open").textContent="$"+fmt(m.open,2);
+  $("high").textContent="$"+fmt(m.high,2);
+  $("low").textContent="$"+fmt(m.low,2);
+  $("estimate").textContent="$"+fmt(m.estimate,2);
+  $("ema9").textContent="$"+fmt(m.ema9,2);
+  $("ema21").textContent="$"+fmt(m.ema21,2);
+  $("rsi").textContent=fmt(m.rsi,1);
+  $("vwap").textContent="$"+fmt(m.vwap,2);
+  $("momentum").textContent=(m.momentum>=0?"+":"")+fmt(m.momentum,3)+"%";
+  $("relvol").textContent=fmt(m.relvol,2)+"x";
+  $("confidence").textContent=sig.confidence+"%";
+
+  const s=$("signal");
+  s.className="signal";
+  $("signalText").textContent=sig.signal==="UP"?"SUBE":sig.signal==="DOWN"?"BAJA":"ESPERAR";
+  $("signalReason").textContent=sig.reason;
+  if(sig.signal==="UP") s.classList.add("green");
+  if(sig.signal==="DOWN") s.classList.add("red");
+
+  const entry=m.price;
+  $("entry").textContent="$"+fmt(entry,2);
+  if(sig.signal==="UP"){
+    $("sl").textContent="$"+fmt(entry*0.9975,2);
+    $("tp").textContent="$"+fmt(entry*1.0045,2);
+  }else if(sig.signal==="DOWN"){
+    $("sl").textContent="$"+fmt(entry*1.0025,2);
+    $("tp").textContent="$"+fmt(entry*0.9955,2);
+  }else{
+    $("sl").textContent="--";$("tp").textContent="--";
+  }
+  $("source").textContent="Fuente: "+sourceName+" · datos renovados cada 5 s";
+}
+
+function updateCountdown(closeTime){
+  const ms=Math.max(0,closeTime-Date.now());
+  const sec=Math.floor(ms/1000);
+  const min=Math.floor(sec/60), s=sec%60;
+  $("countdown").textContent="Próximo cierre: "+min+":"+String(s).padStart(2,"0");
+}
+
+async function cycle(){
+  if(busy) return;
+  busy=true; attempt++;
+  setStatus("Actualizando datos...", "#ffd21a", attempt);
+  try{
+    const market=await loadMarket();
+    sourceName=market.source;
+    const rows=market.raw;
+    const closes=rows.map(r=>Number(r[4]));
+    const current=market.price;
+    const last=rows[rows.length-1];
+    const open=Number(last[1]), high=Math.max(Number(last[2]),current), low=Math.min(Number(last[3]),current);
+    const candleOpenTime=Number(last[0]);
+    const closeTime=candleOpenTime+15*60*1000;
+    const ema9=calculateEMA(closes.slice(-60),9);
+    const ema21=calculateEMA(closes.slice(-60),21);
+    const rsi=calculateRSI(closes.slice(-60),14);
+    const vwap=calculateVWAP(rows.slice(-40));
+    const momentum=calcMomentum(closes);
+    const relvol=calcRelativeVolume(rows);
+    const estimate=estimateClose(open,current,Date.now()-candleOpenTime);
+
+    const m={price:current,open,high,low,ema9,ema21,rsi,vwap,momentum,relvol,estimate};
+    const sig=makeSignal(m);
+    render(m,sig);
+    updateCountdown(closeTime);
+    setStatus("Conectado · datos reales", "#21d66b", attempt);
+    $("log").textContent="OK · "+new Date().toLocaleTimeString()+"\nFuente activa: "+sourceName+
+      "\nCada 5 segundos se renuevan precio, vela, indicadores y señal.";
+    lastGood=Date.now();
+  }catch(e){
+    setStatus("Reintentando conexión...", "#ff4d58", attempt);
+    $("log").textContent="No se pudo obtener datos en este ciclo.\n"+e.message+
+      "\n\nEl bot seguirá probando automáticamente otras rutas.";
+  }finally{
+    busy=false;
+  }
+}
+
+async function manualRefresh(){ await cycle(); }
+
+cycle();
+setInterval(cycle,5000);
+setInterval(()=>{
+  // El contador sigue funcionando aunque una petición tarde.
+  const now=new Date();
+  const quarter=Math.floor(now.getTime()/(15*60*1000))*15*60*1000;
+  updateCountdown(quarter+15*60*1000);
+},1000);
+</script>
+</body>
+</html>
