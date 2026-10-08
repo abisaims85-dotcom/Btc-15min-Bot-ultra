@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>₿ BTC 15-Min PRO V5.2</title>
+
+<style>
+:root{
+  --bg:#090d14;
+  --card:#111824;
+  --card2:#0d141f;
+  --text:#f4f7fb;
+  --muted:#91a0b4;
+  --line:#202b3a;
+  --green:#20d27a;
+  --red:#ff4d5e;
+  --yellow:#f5c84b;
+  --blue:#55a7ff;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:linear-gradient(180deg,#080b11,#0d131c);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  padding:12px;
+}
+
+.app{
+  max-width:680px;
+  margin:auto
+}
+
+h1{
+  font-size:23px;
+  margin:4px 0 2px
+}
+
+.sub{
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:12px
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:10px
+}
+
+.signal{
+  border-radius:18px;
+  padding:17px;
+  text-align:center;
+  border:1px solid var(--line);
+  background:var(--card2)
+}
+
+.signal .emoji{
+  font-size:42px;
+  line-height:1.05
+}
+
+.signal .label{
+  font-size:29px;
+  font-weight:900;
+  letter-spacing:.5px;
+  margin-top:4px
+}
+
+.signal .reason{
+  font-size:13px;
+  color:var(--muted);
+  min-height:18px;
+  margin-top:5px
+}
+
+.green{color:var(--green)}
+.red{color:var(--red)}
+.yellow{color:var(--yellow)}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px
+}
+
+.metric{
+  background:var(--card2);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px
+}
+
+.metric .k{
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:4px
+}
+
+.metric .v{
+  font-variant-numeric:tabular-nums;
+  font-size:16px;
+  font-weight:700;
+  white-space:nowrap
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px
+}
+
+.bigprice{
+  font-size:28px;
+  font-weight:900;
+  font-variant-numeric:tabular-nums
+}
+
+.badge{
+  font-size:12px;
+  padding:5px 8px;
+  border-radius:999px;
+  background:#182231;
+  color:var(--muted);
+  white-space:nowrap
+}
+
+.levels{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px
+}
+
+.level{
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card2)
+}
+
+.level b{
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:5px
+}
+
+.level span{
+  font-size:16px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px
+}
+
+th,td{
+  text-align:left;
+  padding:8px 5px;
+  border-bottom:1px solid var(--line)
+}
+
+th{
+  color:var(--muted);
+  font-weight:600
+}
+
+.num{
+  font-variant-numeric:tabular-nums
+}
+
+.status{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.45
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:0;
+  border-radius:12px;
+  background:#1b2737;
+  color:white;
+  font-weight:700
+}
+
+.small{
+  font-size:11px;
+  color:var(--muted)
+}
+
+.ok{color:var(--green)}
+.bad{color:var(--red)}
+
+@media(max-width:390px){
+  .bigprice{font-size:24px}
+  .signal .label{font-size:25px}
+  .levels span{font-size:14px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>₿ BTC 15-Min PRO V5.2</h1>
+
+  <div class="sub">
+    Señal experimental · actualización automática cada 5 segundos
+  </div>
+
+  <div class="signal" id="signalBox">
+    <div class="emoji" id="sigEmoji">🟡</div>
+    <div class="label yellow" id="sigLabel">ESPERAR</div>
+    <div class="reason" id="sigReason">Preparando datos...</div>
+  </div>
+
+  <div class="card">
+
+    <div class="row">
+
+      <div>
+        <div class="small">BTC/USDT</div>
+        <div class="bigprice" id="price">—</div>
+      </div>
+
+      <div class="badge" id="connection">
+        Conectando…
+      </div>
+
+    </div>
+
+    <div style="height:9px"></div>
+
+    <div class="grid">
+
+      <div class="metric">
+        <div class="k">Cierre de vela</div>
+        <div class="v num" id="countdown">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Vela</div>
+        <div class="v" id="candleState">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Apertura</div>
+        <div class="v num" id="open">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Máximo</div>
+        <div class="v num" id="high">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Mínimo</div>
+        <div class="v num" id="low">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Momentum</div>
+        <div class="v num" id="momentum">—</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+
+    <div class="grid">
+
+      <div class="metric">
+        <div class="k">EMA 9</div>
+        <div class="v num" id="ema9">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">EMA 21</div>
+        <div class="v num" id="ema21">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">RSI 14</div>
+        <div class="v num" id="rsi">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">VWAP</div>
+        <div class="v num" id="vwap">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">ATR 14</div>
+        <div class="v num" id="atr">—</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Confianza</div>
+        <div class="v num" id="confidence">—</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+
+    <div class="small" style="margin-bottom:8px">
+      NIVELES ACTUALES · se recalculan con cada actualización
+    </div>
+
+    <div class="levels">
+
+      <div class="level">
+        <b>ENTRADA</b>
+        <span id="entry">—</span>
+      </div>
+
+      <div class="level">
+        <b>STOP LOSS</b>
+        <span id="sl">—</span>
+      </div>
+
+      <div class="level">
+        <b>TAKE PROFIT</b>
+        <span id="tp">—</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+
+    <div class="row">
+      <b>Simulador</b>
+      <span class="small" id="lastUpdate">
+        Última actualización: —
+      </span>
+    </div>
+
+    <div style="height:8px"></div>
+
+    <div class="grid">
+
+      <div class="metric">
+        <div class="k">Aciertos</div>
+        <div class="v" id="wins">0</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Fallos</div>
+        <div class="v" id="losses">0</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Señales</div>
+        <div class="v" id="signals">0</div>
+      </div>
+
+      <div class="metric">
+        <div class="k">Precisión</div>
+        <div class="v" id="accuracy">—</div>
+      </div>
+
+    </div>
+
+    <div style="height:8px"></div>
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th>Señal</th>
+          <th>Conf.</th>
+          <th>Resultado</th>
+        </tr>
+      </thead>
+
+      <tbody id="history"></tbody>
+
+    </table>
+
+    <div style="height:8px"></div>
+
+    <button id="reset">
+      Reiniciar estadísticas
+    </button>
+
+  </div>
+
+  <div class="card status">
+
+    <b>Cómo funciona esta versión</b>
+
+    <br><br>
+
+    • Actualiza precio, vela, indicadores, señal, entrada, SL, TP y confianza cada 5 segundos.
+
+    <br>
+
+    • La conexión de precio y la conexión de velas son independientes.
+
+    <br>
+
+    • Si una fuente falla, prueba automáticamente otra.
+
+    <br>
+
+    • No borra una lectura válida solamente porque falle una petición secundaria.
+
+    <br>
+
+    • No reconstruye toda la pantalla en cada actualización.
+
+    <br>
+
+    • La señal tiene memoria para evitar cambios bruscos por una sola lectura.
+
+    <br>
+
+    • Si la señal pierde fuerza o se contradice, puede pasar a 🟡 ESPERAR antes de cambiar de lado.
+
+    <br>
+
+    • Entrada, SL y TP se recalculan con la señal vigente.
+
+    <br><br>
+
+    <span class="small">
+      ⚠️ Herramienta experimental. La confianza no es una probabilidad garantizada y no coloca órdenes.
+    </span>
+
+  </div>
+
+</div>
+
+
+<script>
+"use strict";
+
+/* =========================================================
+   BTC 15-MIN PRO V5.2
+   CONEXIÓN ROBUSTA
+   ========================================================= */
+
+const $ = id => document.getElementById(id);
+
+const UPDATE_MS = 5000;
+const REQUEST_TIMEOUT = 6500;
+const MAX_AGE_MS = 15000;
+
+const BINANCE_KLINES = [
+  {
+    name:"Binance",
+    type:"binance",
+    url:"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=200"
+  },
+  {
+    name:"Binance US",
+    type:"binance",
+    url:"https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=200"
+  }
+];
+
+const PRICE_SOURCES = [
+  {
+    name:"Binance",
+    url:"https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+  },
+  {
+    name:"Binance US",
+    url:"https://api.binance.us/api/v3/ticker/price?symbol=BTCUSDT"
+  },
+  {
+    name:"Coinbase",
+    url:"https://api.exchange.coinbase.com/products/BTC-USD/ticker"
+  }
+];
+
+let lastAnalysis = null;
+let lastLivePrice = null;
+let lastSource = "";
+
+let lastSignal = "WAIT";
+let pendingSignal = null;
+let pendingCount = 0;
+
+let lastCandleOpen = 0;
+
+let currentLevels = {
+  entry:null,
+  sl:null,
+  tp:null
+};
+
+let refreshing = false;
+
+let stats = JSON.parse(
+  localStorage.getItem("btcV52Stats") ||
+  '{"wins":0,"losses":0,"signals":0,"history":[]}'
+);
+
+
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+
+const fmt = (n,d=2) => {
+
+  if(!Number.isFinite(n)) return "—";
+
+  return n.toLocaleString("en-US",{
+    minimumFractionDigits:d,
+    maximumFractionDigits:d
+  });
+
+};
+
+
+function setText(id,value){
+
+  const e = $(id);
+
+  if(e){
+    e.textContent = String(value);
+  }
+
+}
+
+
+/* =========================================================
+   LIMPIAR SOLO CUANDO REALMENTE NO HAY DATOS
+   ========================================================= */
+
+function clearMarket(){
+
+  [
+    "price",
+    "open",
+    "high",
+    "low",
+    "ema9",
+    "ema21",
+    "rsi",
+    "vwap",
+    "atr",
+    "momentum",
+    "countdown",
+    "candleState",
+    "entry",
+    "sl",
+    "tp",
+    "confidence"
+  ].forEach(id => setText(id,"—"));
+
+  setText(
+    "connection",
+    "● SIN DATOS · REINTENTANDO"
+  );
+
+  $("connection").className = "badge";
+
+  setText("sigEmoji","🟡");
+  setText("sigLabel","ESPERAR");
+
+  $("sigLabel").className = "label yellow";
+
+  setText(
+    "sigReason",
+    "No hay una lectura fresca del mercado."
+  );
+
+  lastAnalysis = null;
+  lastLivePrice = null;
+
+  currentLevels = {
+    entry:null,
+    sl:null,
+    tp:null
+  };
+
+}
+
+
+/* =========================================================
+   FETCH CON TIMEOUT Y CACHE DESACTIVADO
+   ========================================================= */
+
+async function fetchFresh(url){
+
+  const controller = new AbortController();
+
+  const timer = setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT
+  );
+
+  try{
+
+    const separator =
+      url.includes("?") ? "&" : "?";
+
+    const finalURL =
+      url +
+      separator +
+      "_v52=" +
+      Date.now();
+
+    const response = await fetch(
+      finalURL,
+      {
+        method:"GET",
+        cache:"no-store",
+        signal:controller.signal,
+        headers:{
+          "Cache-Control":"no-cache",
+          "Pragma":"no-cache"
+        }
+      }
+    );
+
+    if(!response.ok){
+
+      throw new Error(
+        "HTTP " + response.status
+      );
+
+    }
+
+    return await response.json();
+
+  }finally{
+
+    clearTimeout(timer);
+
+  }
+
+}
+
+
+/* =========================================================
+   NORMALIZAR VELAS
+   ========================================================= */
+
+function normalizeBinance(json){
+
+  return json
+    .map(k => ({
+
+      openTime:Number(k[0]),
+
+      open:Number(k[1]),
+
+      high:Number(k[2]),
+
+      low:Number(k[3]),
+
+      close:Number(k[4]),
+
+      volume:Number(k[5]),
+
+      closeTime:Number(k[6])
+
+    }))
+    .filter(c =>
+      Number.isFinite(c.close) &&
+      Number.isFinite(c.open)
+    );
+
+}
+
+
+function normalizeCoinbase(json){
+
+  return json
+    .sort((a,b) => a[0]-b[0])
+    .map(k => ({
+
+      openTime:Number(k[0]) * 1000,
+
+      low:Number(k[1]),
+
+      high:Number(k[2]),
+
+      open:Number(k[3]),
+
+      close:Number(k[4]),
+
+      volume:Number(k[5]),
+
+      closeTime:
+        (Number(k[0]) + 900) * 1000 - 1
+
+    }))
+    .filter(c =>
+      Number.isFinite(c.close)
+    );
+
+}
+
+
+/* =========================================================
+   PRECIO
+   ========================================================= */
+
+function parsePrice(json){
+
+  const p = Number(json.price);
+
+  if(Number.isFinite(p) && p > 0){
+
+    return p;
+
+  }
+
+  return null;
+
+}
+
+
+/* =========================================================
+   OBTENER PRECIO
+   NO DEPENDE DE LAS VELAS
+   ========================================================= */
+
+async function getFreshPrice(){
+
+  for(const source of PRICE_SOURCES){
+
+    try{
+
+      const json =
+        await fetchFresh(source.url);
+
+      const price =
+        parsePrice(json);
+
+      if(
+        Number.isFinite(price) &&
+        price > 0
+      ){
+
+        return {
+          price,
+          source:source.name,
+          receivedAt:Date.now()
+        };
+
+      }
+
+    }catch(error){
+
+      // prueba siguiente fuente
+
+    }
+
+  }
+
+  throw new Error(
+    "No se pudo obtener precio"
+  );
+
+}
+
+
+/* =========================================================
+   OBTENER VELAS
+   NO DEPENDE DEL TICKER
+   ========================================================= */
+
+async function getFreshCandles(){
+
+  for(const source of BINANCE_KLINES){
+
+    try{
+
+      const json =
+        await fetchFresh(source.url);
+
+      const candles =
+        normalizeBinance(json);
+
+      if(candles.length >= 30){
+
+        return {
+
+          candles,
+
+          source:source.name,
+
+          receivedAt:Date.now()
+
+        };
+
+      }
+
+    }catch(error){
+
+      // prueba siguiente fuente
+
+    }
+
+  }
+
+
+  /* Coinbase como último respaldo */
+
+  try{
+
+    const json =
+      await fetchFresh(
+        "https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=900"
+      );
+
+    const candles =
+      normalizeCoinbase(json);
+
+    if(candles.length >= 30){
+
+      return {
+
+        candles,
+
+        source:"Coinbase",
+
+        receivedAt:Date.now()
+
+      };
+
+    }
+
+  }catch(error){
+
+    // sin datos
+
+  }
+
+
+  throw new Error(
+    "No se pudieron obtener velas"
+  );
+
+}
+
+
+/* =========================================================
+   CONSTRUIR MERCADO
+   PRECIO + VELAS INDEPENDIENTES
+   ========================================================= */
+
+async function getLiveMarket(){
+
+  const results =
+    await Promise.allSettled([
+      getFreshCandles(),
+      getFreshPrice()
+    ]);
+
+  const candleResult = results[0];
+  const priceResult = results[1];
+
+  let candleData =
+    candleResult.status === "fulfilled"
+      ? candleResult.value
+      : null;
+
+  let priceData =
+    priceResult.status === "fulfilled"
+      ? priceResult.value
+      : null;
+
+
+  /*
+     Si no tenemos ticker pero sí velas,
+     usamos el último close fresco.
+  */
+
+  if(!priceData && candleData){
+
+    const last =
+      candleData.candles[
+        candleData.candles.length-1
+      ];
+
+    if(
+      Number.isFinite(last.close) &&
+      last.close > 0
+    ){
+
+      priceData = {
+
+        price:last.close,
+
+        source:candleData.source,
+
+        receivedAt:Date.now(),
+
+        fallback:true
+
+      };
+
+    }
+
+  }
+
+
+  if(!candleData || !priceData){
+
+    throw new Error(
+      "No hay datos suficientes"
+    );
+
+  }
+
+
+  const candles =
+    candleData.candles.slice();
+
+
+  const price =
+    priceData.price;
+
+  const now = Date.now();
+
+  const slot =
+    Math.floor(
+      now / (15*60*1000)
+    ) * 15*60*1000;
+
+
+  let current =
+    candles[candles.length-1];
+
+
+  /*
+     Si Binance ya tiene la vela actual,
+     actualizarla con el precio actual.
+  */
+
+  if(current.openTime === slot){
+
+    current = {
+      ...current,
+
+      close:price,
+
+      high:Math.max(
+        current.high,
+        price
+      ),
+
+      low:Math.min(
+        current.low,
+        price
+      ),
+
+      closeTime:
+        slot + 15*60*1000 - 1
+
+    };
+
+    candles[candles.length-1] =
+      current;
+
+  }
+
+  /*
+     Si la última vela es anterior,
+     crear solamente la vela actual.
+  */
+
+  else if(current.openTime < slot){
+
+    const previous = current;
+
+    current = {
+
+      openTime:slot,
+
+      open:price,
+
+      high:price,
+
+      low:price,
+
+      close:price,
+
+      volume:0,
+
+      closeTime:
+        slot + 15*60*1000 - 1
+
+    };
+
+    candles.push(current);
+
+  }
+
+
+  return {
+
+    candles,
+
+    price,
+
+    source:
+      priceData.source +
+      (priceData.fallback ? " · respaldo" : ""),
+
+    receivedAt:Math.max(
+      candleData.receivedAt,
+      priceData.receivedAt
+    ),
+
+    candle:current
+
+  };
+
+}
+
+
+/* =========================================================
+   INDICADORES
+   ========================================================= */
+
+function ema(values,period){
+
+  if(values.length < period){
+
+    return null;
+
+  }
+
+  const k =
+    2/(period+1);
+
+  let e =
+    values
+      .slice(0,period)
+      .reduce(
+        (a,b)=>a+b,
+        0
+      ) / period;
+
+  for(
+    let i=period;
+    i<values.length;
+    i++
+  ){
+
+    e =
+      values[i] * k +
+      e * (1-k);
+
+  }
+
+  return e;
+
+}
+
+
+function rsi(values,period=14){
+
+  if(values.length <= period){
+
+    return null;
+
+  }
+
+  let gain=0;
+  let loss=0;
+
+  for(
+    let i=1;
+    i<=period;
+    i++
+  ){
+
+    const d =
+      values[i]-values[i-1];
+
+    if(d>=0) gain+=d;
+    else loss-=d;
+
+  }
+
+  gain/=period;
+  loss/=period;
+
+  for(
+    let i=period+1;
+    i<values.length;
+    i++
+  ){
+
+    const d =
+      values[i]-values[i-1];
+
+    gain =
+      (
+        gain*(period-1) +
+        Math.max(0,d)
+      ) / period;
+
+    loss =
+      (
+        loss*(period-1) +
+        Math.max(0,-d)
+      ) / period;
+
+  }
+
+  if(loss===0){
+
+    return 100;
+
+  }
+
+  return 100 -
+    100/(1+gain/loss);
+
+}
+
+
+function atr(data,period=14){
+
+  if(data.length < period+1){
+
+    return null;
+
+  }
+
+  const tr=[];
+
+  for(
+    let i=1;
+    i<data.length;
+    i++
+  ){
+
+    const c=data[i];
+    const previous=data[i-1].close;
+
+    tr.push(
+      Math.max(
+        c.high-c.low,
+
+        Math.abs(
+          c.high-previous
+        ),
+
+        Math.abs(
+          c.low-previous
+        )
+      )
+    );
+
+  }
+
+  let value =
+    tr
+      .slice(0,period)
+      .reduce(
+        (a,b)=>a+b,
+        0
+      ) / period;
+
+  for(
+    let i=period;
+    i<tr.length;
+    i++
+  ){
+
+    value =
+      (
+        value*(period-1) +
+        tr[i]
+      ) / period;
+
+  }
+
+  return value;
+
+}
+
+
+function vwap(data){
+
+  let pv=0;
+  let volume=0;
+
+  for(const c of data){
+
+    const typical =
+      (
+        c.high +
+        c.low +
+        c.close
+      ) / 3;
+
+    const vol =
+      Number.isFinite(c.volume)
+        ? c.volume
+        : 0;
+
+    pv += typical*vol;
+
+    volume += vol;
+
+  }
+
+  return volume>0
+    ? pv/volume
+    : null;
+
+}
+
+
+function pct(a,b){
+
+  if(
+    !Number.isFinite(a) ||
+    !Number.isFinite(b) ||
+    b===0
+  ){
+
+    return 0;
+
+  }
+
+  return (
+    (a-b)/b
+  )*100;
+
+}
+
+
+/* =========================================================
+   ANÁLISIS V5.2
+   ========================================================= */
+
+function analyze(data,price){
+
+  const closes =
+    data.map(c=>c.close);
+
+  const current =
+    data[data.length-1];
+
+
+  const e9 =
+    ema(closes,9);
+
+  const e21 =
+    ema(closes,21);
+
+  const r =
+    rsi(closes,14);
+
+  const vw =
+    vwap(data);
+
+  const a =
+    atr(data,14);
+
+
+  const old5 =
+    closes[
+      Math.max(
+        0,
+        closes.length-6
+      )
+    ];
+
+
+  const momentum =
+    pct(price,old5);
+
+  const body =
+    pct(price,current.open);
+
+
+  const range =
+    Math.max(
+      current.high-current.low,
+      0.000001
+    );
+
+
+  const position =
+    (
+      price-current.low
+    )/range;
+
+
+  let slope=0;
+
+  if(
+    e9 &&
+    closes.length>12
+  ){
+
+    const previousEMA =
+      ema(
+        closes.slice(0,-3),
+        9
+      );
+
+    slope =
+      pct(
+        e9,
+        previousEMA
+      );
+
+  }
+
+
+  let score=0;
+
+
+  if(e9 && e21){
+
+    if(e9>e21) score+=2;
+    else score-=2;
+
+  }
+
+
+  if(e9){
+
+    if(price>e9) score+=1.5;
+    else score-=1.5;
+
+  }
+
+
+  if(e21){
+
+    if(price>e21) score+=1;
+    else score-=1;
+
+  }
+
+
+  if(vw){
+
+    if(price>vw) score+=1;
+    else score-=1;
+
+  }
+
+
+  if(momentum>.10){
+
+    score+=2;
+
+  }else if(momentum<-.10){
+
+    score-=2;
+
+  }
+
+
+  if(slope>.03){
+
+    score+=1.5;
+
+  }else if(slope<-.03){
+
+    score-=1.5;
+
+  }
+
+
+  if(r>55){
+
+    score+=1;
+
+  }else if(r<45){
+
+    score-=1;
+
+  }
+
+
+  if(body>.08 && position>.62){
+
+    score+=1;
+
+  }
+
+
+  if(body<-.08 && position<.38){
+
+    score-=1;
+
+  }
+
+
+  if(r>76){
+
+    score-=1.5;
+
+  }
+
+
+  if(r<24){
+
+    score+=1.5;
+
+  }
+
+
+  let raw =
+    score>=2.2
+      ? "UP"
+      : score<=-2.2
+        ? "DOWN"
+        : "WAIT";
+
+
+  /*
+     Protección contra cambios demasiado rápidos.
+  */
+
+  let invalid=false;
+
+
+  if(lastSignal==="UP"){
+
+    invalid =
+      (
+        score<0.5
+      ) ||
+      (
+        e9 &&
+        price<e9 &&
+        momentum<-.08
+      );
+
+  }
+
+
+  if(lastSignal==="DOWN"){
+
+    invalid =
+      (
+        score>-0.5
+      ) ||
+      (
+        e9 &&
+        price>e9 &&
+        momentum>.08
+      );
+
+  }
+
+
+  if(
+    lastSignal!=="WAIT" &&
+    raw!==lastSignal &&
+    !invalid
+  ){
+
+    raw="WAIT";
+
+  }
+
+
+  /*
+     Se requieren dos lecturas consecutivas
+     para confirmar un cambio.
+  */
+
+  if(raw!==lastSignal){
+
+    if(pendingSignal===raw){
+
+      pendingCount++;
+
+    }else{
+
+      pendingSignal=raw;
+      pendingCount=1;
+
+    }
+
+
+    if(pendingCount>=2){
+
+      lastSignal=raw;
+
+      pendingSignal=null;
+      pendingCount=0;
+
+    }
+
+  }else{
+
+    pendingSignal=null;
+    pendingCount=0;
+
+  }
+
+
+  /*
+     Si la señal actual queda invalidada,
+     pasa inmediatamente a ESPERAR.
+  */
+
+  if(
+    invalid &&
+    raw!==lastSignal
+  ){
+
+    lastSignal="WAIT";
+
+    pendingSignal=null;
+    pendingCount=0;
+
+  }
+
+
+  const confidence =
+    Math.min(
+      99,
+      Math.round(
+        50 +
+        Math.min(
+          42,
+          Math.abs(score)*7
+        )
+      )
+    );
+
+
+  let reason =
+    "Fuerzas mezcladas";
+
+
+  if(lastSignal==="UP"){
+
+    reason =
+      "Estructura alcista · score " +
+      score.toFixed(1);
+
+  }else if(lastSignal==="DOWN"){
+
+    reason =
+      "Estructura bajista · score " +
+      score.toFixed(1);
+
+  }else{
+
+    reason =
+      invalid
+        ? "Señal invalidada · esperar confirmación"
+        : "Sin confirmación suficiente para entrar";
+
+  }
+
+
+  return {
+
+    current,
+
+    price,
+
+    e9,
+
+    e21,
+
+    r,
+
+    vw,
+
+    a,
+
+    momentum,
+
+    score,
+
+    signal:lastSignal,
+
+    confidence,
+
+    reason,
+
+    receivedAt:Date.now()
+
+  };
+
+}
+
+
+/* =========================================================
+   ENTRADA / SL / TP
+   ========================================================= */
+
+function updateLevels(a){
+
+  if(
+    a.signal==="WAIT" ||
+    !Number.isFinite(a.a)
+  ){
+
+    currentLevels={
+      entry:null,
+      sl:null,
+      tp:null
+    };
+
+  }else{
+
+    const risk =
+      Math.max(
+        a.a,
+        a.price*0.0015
+      );
+
+
+    currentLevels={
+
+      entry:a.price,
+
+      sl:
+        a.signal==="UP"
+          ? a.price-risk*1.05
+          : a.price+risk*1.05,
+
+      tp:
+        a.signal==="UP"
+          ? a.price+risk*1.55
+          : a.price-risk*1.55
+
+    };
+
+  }
+
+
+  setText(
+    "entry",
+    currentLevels.entry
+      ? "$"+fmt(currentLevels.entry)
+      : "—"
+  );
+
+
+  setText(
+    "sl",
+    currentLevels.sl
+      ? "$"+fmt(currentLevels.sl)
+      : "—"
+  );
+
+
+  setText(
+    "tp",
+    currentLevels.tp
+      ? "$"+fmt(currentLevels.tp)
+      : "—"
+  );
+
+}
+
+
+/* =========================================================
+   ACTUALIZAR INTERFAZ
+   ========================================================= */
+
+function updateUI(a,source){
+
+  if(
+    Date.now()-a.receivedAt >
+    MAX_AGE_MS
+  ){
+
+    return;
+
+  }
+
+
+  const c=a.current;
+
+
+  setText(
+    "price",
+    "$"+fmt(a.price)
+  );
+
+  setText(
+    "open",
+    "$"+fmt(c.open)
+  );
+
+  setText(
+    "high",
+    "$"+fmt(c.high)
+  );
+
+  setText(
+    "low",
+    "$"+fmt(c.low)
+  );
+
+
+  setText(
+    "ema9",
+    "$"+fmt(a.e9)
+  );
+
+  setText(
+    "ema21",
+    "$"+fmt(a.e21)
+  );
+
+  setText(
+    "rsi",
+    fmt(a.r,1)
+  );
+
+  setText(
+    "vwap",
+    "$"+fmt(a.vw)
+  );
+
+  setText(
+    "atr",
+    "$"+fmt(a.a)
+  );
+
+
+  setText(
+    "momentum",
+    (a.momentum>=0?"+":"") +
+    fmt(a.momentum,3) +
+    "%"
+  );
+
+
+  setText(
+    "confidence",
+    a.signal==="WAIT"
+      ? "—"
+      : a.confidence+"%"
+  );
+
+
+  setText(
+    "candleState",
+    a.price>=c.open
+      ? "Alcista"
+      : "Bajista"
+  );
+
+
+  setText(
+    "connection",
+    "● EN VIVO · "+source
+  );
+
+  $("connection").className =
+    "badge ok";
+
+
+  setText(
+    "lastUpdate",
+    "Última actualización: " +
+    new Date().toLocaleTimeString()
+  );
+
+
+  const remaining =
+    Math.max(
+      0,
+      c.closeTime-Date.now()
+    );
+
+
+  setText(
+    "countdown",
+    `${String(
+      Math.floor(remaining/60000)
+    ).padStart(2,"0")}:${String(
+      Math.floor(remaining/1000)%60
+    ).padStart(2,"0")}`
+  );
+
+
+  setText(
+    "sigEmoji",
+    a.signal==="UP"
+      ? "🟢"
+      : a.signal==="DOWN"
+        ? "🔴"
+        : "🟡"
+  );
+
+
+  setText(
+    "sigLabel",
+    a.signal==="UP"
+      ? "SUBE"
+      : a.signal==="DOWN"
+        ? "BAJA"
+        : "ESPERAR"
+  );
+
+
+  $("sigLabel").className =
+    "label " +
+    (
+      a.signal==="UP"
+        ? "green"
+        : a.signal==="DOWN"
+          ? "red"
+          : "yellow"
+    );
+
+
+  setText(
+    "sigReason",
+    a.reason
+  );
+
+
+  updateLevels(a);
+
+}
+
+
+/* =========================================================
+   ESTADÍSTICAS
+   ========================================================= */
+
+function renderStats(){
+
+  setText(
+    "wins",
+    stats.wins
+  );
+
+  setText(
+    "losses",
+    stats.losses
+  );
+
+  setText(
+    "signals",
+    stats.signals
+  );
+
+
+  const total =
+    stats.wins +
+    stats.losses;
+
+
+  setText(
+    "accuracy",
+    total
+      ? Math.round(
+          stats.wins/total*100
+        )+"%"
+      : "—"
+  );
+
+
+  $("history").innerHTML =
+    stats.history
+      .slice(0,8)
+      .map(x =>
+        `<tr>
+          <td>${x.time}</td>
+          <td>${x.signal}</td>
+          <td>${x.conf}%</td>
+          <td>${x.result||"—"}</td>
+        </tr>`
+      )
+      .join("");
+
+}
+
+
+function saveStats(){
+
+  localStorage.setItem(
+    "btcV52Stats",
+    JSON.stringify(stats)
+  );
+
+  renderStats();
+
+}
+
+
+/* =========================================================
+   REFRESH PRINCIPAL
+   ========================================================= */
+
+async function refresh(){
+
+  if(refreshing){
+
+    return;
+
+  }
+
+
+  refreshing=true;
+
+
+  try{
+
+    const live =
+      await getLiveMarket();
+
+
+    if(
+      !Number.isFinite(live.price) ||
+      live.price<=0
+    ){
+
+      throw new Error(
+        "Precio inválido"
+      );
+
+    }
+
+
+    if(
+      Date.now()-live.receivedAt >
+      MAX_AGE_MS
+    ){
+
+      throw new Error(
+        "Lectura demasiado vieja"
+      );
+
+    }
+
+
+    /*
+       Si empieza una nueva vela,
+       limpiamos el estado pendiente
+       pero NO forzamos una señal.
+    */
+
+    if(
+      lastCandleOpen &&
+      live.candle.openTime !==
+      lastCandleOpen
+    ){
+
+      pendingSignal=null;
+      pendingCount=0;
+
+    }
+
+
+    lastCandleOpen =
+      live.candle.openTime;
+
+
+    const analysis =
+      analyze(
+        live.candles,
+        live.price
+      );
+
+
+    lastLivePrice =
+      live.price;
+
+
+    lastSource =
+      live.source;
+
+
+    lastAnalysis =
+      analysis;
+
+
+    updateUI(
+      analysis,
+      live.source
+    );
+
+
+  }catch(error){
+
+    /*
+       IMPORTANTE:
+       si ya tenemos una lectura fresca,
+       NO borramos la pantalla por un
+       fallo aislado de una petición.
+    */
+
+    if(
+      lastAnalysis &&
+      Date.now() -
+      lastAnalysis.receivedAt <=
+      MAX_AGE_MS
+    ){
+
+      setText(
+        "connection",
+        "● DATOS ANTERIORES · REINTENTANDO"
+      );
+
+      $("connection").className =
+        "badge";
+
+    }else{
+
+      clearMarket();
+
+    }
+
+  }finally{
+
+    refreshing=false;
+
+  }
+
+}
+
+
+/* =========================================================
+   COUNTDOWN CADA SEGUNDO
+   ========================================================= */
+
+setInterval(()=>{
+
+  if(
+    lastAnalysis &&
+    Date.now() -
+    lastAnalysis.receivedAt <=
+    MAX_AGE_MS
+  ){
+
+    const remaining =
+      Math.max(
+        0,
+        lastAnalysis.current.closeTime -
+        Date.now()
+      );
+
+
+    setText(
+      "countdown",
+      `${String(
+        Math.floor(
+          remaining/60000
+        )
+      ).padStart(2,"0")}:${String(
+        Math.floor(
+          remaining/1000
+        )%60
+      ).padStart(2,"0")}`
+    );
+
+  }
+
+},1000);
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+$("reset").addEventListener(
+  "click",
+  ()=>{
+
+    stats={
+      wins:0,
+      losses:0,
+      signals:0,
+      history:[]
+    };
+
+    saveStats();
+
+  }
+);
+
+
+/* =========================================================
+   INICIO
+   ========================================================= */
+
+renderStats();
+
+clearMarket();
+
+refresh();
+
+/*
+   Actualización real cada 5 segundos.
+*/
+setInterval(
+  refresh,
+  UPDATE_MS
+);
+
+</script>
+
+</body>
+</html>
