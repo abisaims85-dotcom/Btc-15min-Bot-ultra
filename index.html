@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#090d14">
+<title>₿ BTC 15-Min PRO V5.3</title>
+<style>
+:root{--bg:#090d14;--card:#111824;--card2:#0d141f;--line:#263142;--text:#f4f7fb;--muted:#96a3b7;--green:#32d583;--red:#ff5d68;--yellow:#ffce4a;--blue:#7ab8ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding:22px 14px 40px}
+main{max-width:850px;margin:auto}.head h1{font-size:clamp(24px,5vw,34px);margin:4px 0 6px}.sub{color:var(--muted);font-size:15px;line-height:1.45;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #0002}
+.signal{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;background:linear-gradient(150deg,#111824,#0d141f)}
+.lamp{font-size:54px;line-height:1.1}.signal h2{font-size:clamp(28px,6vw,40px);margin:0;letter-spacing:.3px}.signal p{color:var(--muted);margin:4px 0 0;line-height:1.4}
+.yellow{color:var(--yellow)}.green{color:var(--green)}.red{color:var(--red)}
+.rowtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.pair{color:var(--muted);font-size:14px}.price{font-size:clamp(27px,6vw,36px);font-weight:750;margin-top:7px;letter-spacing:-.5px}
+.badge{font-size:12px;letter-spacing:.4px;border-radius:999px;padding:9px 12px;background:#1b2636;color:#b7c4d7;display:inline-flex;align-items:center;gap:7px}.dot{width:9px;height:9px;border-radius:50%;background:currentColor;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}.metric{border:1px solid var(--line);border-radius:18px;background:var(--card2);padding:15px;min-width:0}.label{font-size:14px;color:var(--muted);margin-bottom:9px}.value{font-size:clamp(19px,4vw,25px);font-weight:650;overflow-wrap:anywhere}
+.triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}.triple .metric{padding:14px 12px}.triple .value{font-size:clamp(16px,3.6vw,23px)}
+.section-title{color:var(--muted);font-size:14px;margin-bottom:12px}
+.small{font-size:13px;color:var(--muted);line-height:1.55}.statusline{margin-top:12px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+button{border:1px solid var(--line);background:#172233;color:var(--text);border-radius:12px;padding:12px 15px;font-size:14px;font-weight:650;cursor:pointer}button:active{transform:scale(.99)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:11px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}td{overflow-wrap:anywhere}
+.notice{border-left:3px solid var(--yellow);padding:10px 12px;background:#171a20;border-radius:8px;color:#c5ceda;font-size:13px;line-height:1.5}
+footer{text-align:center;color:#78869a;font-size:12px;line-height:1.5;padding:8px 10px}
+@media(max-width:420px){body{padding:17px 10px 30px}.card{padding:15px;border-radius:20px}.grid{gap:9px}.metric{padding:12px}.triple{gap:7px}.triple .metric{padding:11px 8px}.badge{font-size:11px;padding:8px 10px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="head">
+    <h1>₿ BTC 15-Min PRO V5.3</h1>
+    <div class="sub">Señal experimental · actualización automática cada 5 segundos · fuentes alternativas</div>
+  </header>
+
+  <section class="card signal" aria-live="polite">
+    <div class="lamp" id="lamp">🟡</div>
+    <h2 id="signal" class="yellow">ESPERAR</h2>
+    <p id="reason">Conectando con fuentes públicas de mercado…</p>
+  </section>
+
+  <section class="card">
+    <div class="rowtop">
+      <div><div class="pair">BTC/USD · referencia de mercado</div><div class="price" id="price">—</div></div>
+      <div class="badge" id="connection"><span class="dot"></span> CONECTANDO</div>
+    </div>
+    <div class="grid">
+      <div class="metric"><div class="label">Cierre estimado de vela</div><div class="value" id="closeEstimate">—</div></div>
+      <div class="metric"><div class="label">Tiempo restante</div><div class="value" id="countdown">—</div></div>
+      <div class="metric"><div class="label">Apertura de vela</div><div class="value" id="open">—</div></div>
+      <div class="metric"><div class="label">Máximo</div><div class="value" id="high">—</div></div>
+      <div class="metric"><div class="label">Mínimo</div><div class="value" id="low">—</div></div>
+      <div class="metric"><div class="label">Momentum</div><div class="value" id="momentum">—</div></div>
+    </div>
+    <div class="small statusline" id="sourceLine">Fuente: esperando respuesta.</div>
+    <div class="small" id="updatedLine">Última actualización: —</div>
+  </section>
+
+  <section class="card">
+    <div class="grid" style="margin-top:0">
+      <div class="metric"><div class="label">EMA 9</div><div class="value" id="ema9">—</div></div>
+      <div class="metric"><div class="label">EMA 21</div><div class="value" id="ema21">—</div></div>
+      <div class="metric"><div class="label">RSI 14</div><div class="value" id="rsi">—</div></div>
+      <div class="metric"><div class="label">VWAP aproximado</div><div class="value" id="vwap">—</div></div>
+      <div class="metric"><div class="label">ATR 14</div><div class="value" id="atr">—</div></div>
+      <div class="metric"><div class="label">Confianza del modelo</div><div class="value" id="confidence">—</div></div>
+    </div>
+    <div class="small" style="margin-top:12px">La confianza es una puntuación interna de coincidencia de indicadores, no una probabilidad garantizada de ganar.</div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">NIVELES ACTUALES · se recalculan con cada actualización</div>
+    <div class="triple">
+      <div class="metric"><div class="label">ENTRADA</div><div class="value" id="entry">—</div></div>
+      <div class="metric"><div class="label">STOP LOSS</div><div class="value" id="stop">—</div></div>
+      <div class="metric"><div class="label">TAKE PROFIT</div><div class="value" id="target">—</div></div>
+    </div>
+    <div class="small" id="levelsNote" style="margin-top:12px">Los niveles aparecerán cuando existan datos suficientes.</div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">REGISTRO DE ACTUALIZACIONES</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>Hora</th><th>Fuente</th><th>Precio</th><th>Señal</th></tr></thead><tbody id="history"><tr><td colspan="4">Esperando datos válidos…</td></tr></tbody></table>
+    </div>
+    <div class="actions"><button id="refreshBtn">Actualizar ahora</button><button id="resetBtn">Borrar historial</button></div>
+  </section>
+
+  <section class="card">
+    <div class="notice"><strong>Importante:</strong> herramienta experimental de análisis, no asesoría financiera. No coloca órdenes. Si no puede verificar datos recientes, muestra ESPERAR y oculta los niveles. El precio de BTC/USD de estas fuentes puede diferir del BTC/USDT de Binance o del precio de liquidación de Kalshi.</div>
+    <p class="small">Fuentes consultadas en orden: Kraken (velas de 15 minutos), Coinbase (velas públicas de 15 minutos). El acceso puede variar según red, navegador o disponibilidad de cada servicio.</p>
+  </section>
+  <footer>V5.3 · No garantiza resultados. Verifica siempre el precio y las reglas del contrato antes de operar.</footer>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const fmt = n => Number.isFinite(n) ? '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+const fmtNum = (n,d=2) => Number.isFinite(n) ? n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—';
+const state = { candles:[], price:null, source:'', lastSuccess:0, busy:false, history:[] };
+const setText = (id, value) => { $(id).textContent = value; };
+function setConnection(label, color) {
+  const el=$('connection'); el.innerHTML='<span class="dot"></span> '+label; el.style.color=color||'#b7c4d7';
+}
+function ema(values, period) {
+  if(values.length < period) return NaN;
+  const k=2/(period+1); let result=values[0];
+  for(let i=1;i<values.length;i++) result=values[i]*k+result*(1-k);
+  return result;
+}
+function rsi(values, period=14) {
+  if(values.length < period+1) return NaN;
+  let gain=0,loss=0;
+  for(let i=values.length-period;i<values.length;i++){const d=values[i]-values[i-1];if(d>=0)gain+=d;else loss-=d;}
+  if(loss===0) return 100;
+  return 100-(100/(1+gain/loss));
+}
+function atr(candles, period=14) {
+  if(candles.length < period+1) return NaN;
+  const trs=[];
+  for(let i=candles.length-period;i<candles.length;i++){
+    const c=candles[i], prev=candles[i-1];
+    trs.push(Math.max(c.high-c.low,Math.abs(c.high-prev.close),Math.abs(c.low-prev.close)));
+  }
+  return trs.reduce((a,b)=>a+b,0)/trs.length;
+}
+function vwap(candles) {
+  const sample=candles.slice(-20); let sumPV=0,sumV=0;
+  for(const c of sample){const v=Number.isFinite(c.volume)&&c.volume>0?c.volume:1;sumPV+=((c.high+c.low+c.close)/3)*v;sumV+=v;}
+  return sumV?sumPV/sumV:NaN;
+}
+async function fetchJSON(url, timeout=6500) {
+  const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),timeout);
+  try {
+    const response=await fetch(url,{cache:'no-store',signal:controller.signal,headers:{'Accept':'application/json'}});
+    if(!response.ok) throw new Error('HTTP '+response.status);
+    return await response.json();
+  } finally { clearTimeout(timer); }
+}
+async function fromKraken() {
+  const data=await fetchJSON('https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=15');
+  if(data.error && data.error.length) throw new Error(data.error.join(', '));
+  const key=Object.keys(data.result||{}).find(k=>k!=='last');
+  if(!key || !Array.isArray(data.result[key])) throw new Error('Respuesta Kraken sin velas');
+  const candles=data.result[key].map(a=>({time:Number(a[0])*1000,open:+a[1],high:+a[2],low:+a[3],close:+a[4],vwap:+a[5],volume:+a[6]}))
+    .filter(c=>[c.time,c.open,c.high,c.low,c.close].every(Number.isFinite));
+  if(candles.length<25) throw new Error('Historial Kraken insuficiente');
+  const ticker=await fetchJSON('https://api.kraken.com/0/public/Ticker?pair=XBTUSD');
+  if(ticker.error && ticker.error.length) throw new Error(ticker.error.join(', '));
+  const tkKey=Object.keys(ticker.result||{})[0];
+  const price=+(ticker.result?.[tkKey]?.c?.[0]);
+  if(!Number.isFinite(price)||price<=0) throw new Error('Precio Kraken inválido');
+  return {candles,price,source:'Kraken'};
+}
+async function fromCoinbase() {
+  const end=Math.floor(Date.now()/1000), start=end-60*60*24;
+  const url='https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD/candles?start='+start+'&end='+end+'&granularity=FIFTEEN_MINUTE&limit=350';
+  const data=await fetchJSON(url);
+  if(!Array.isArray(data.candles)||data.candles.length<25) throw new Error('Coinbase no devolvió suficientes velas');
+  const candles=data.candles.map(c=>({time:Number(c.start)*1000,low:+c.low,high:+c.high,open:+c.open,close:+c.close,volume:+c.volume}))
+    .filter(c=>[c.time,c.open,c.high,c.low,c.close].every(Number.isFinite)).sort((a,b)=>a.time-b.time);
+  const ticker=await fetchJSON('https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD/ticker');
+  const price=+(ticker.price ?? ticker.trades?.[0]?.price);
+  if(!Number.isFinite(price)||price<=0) throw new Error('Precio Coinbase inválido');
+  return {candles,price,source:'Coinbase'};
+}
+async function loadMarket() {
+  if(state.busy) return;
+  state.busy=true;
+  if(!state.lastSuccess) setConnection('CONECTANDO','#ffce4a');
+  const providers=[fromKraken,fromCoinbase];
+  let errors=[];
+  try {
+    for(const provider of providers){
+      try {
+        const result=await provider();
+        if(!result.candles || result.candles.length<22 || !Number.isFinite(result.price)) throw new Error('Datos incompletos');
+        const now=Date.now();
+        const latest=result.candles[result.candles.length-1];
+        if(now-latest.time>30*60*1000) throw new Error('Velas demasiado antiguas');
+        state.candles=result.candles;state.price=result.price;state.source=result.source;state.lastSuccess=now;
+        render(); return;
+      } catch(e){errors.push(provider.name+': '+(e?.message||'error')); }
+    }
+    setConnection('SIN DATOS · REINTENTANDO','#ffce4a');
+    setText('sourceLine','No se pudo obtener una lectura válida. '+errors.join(' | '));
+    if(state.lastSuccess && Date.now()-state.lastSuccess>20000) {
+      setText('reason','La lectura anterior está vencida. No se muestran señales nuevas.');
+      setText('updatedLine','Último dato válido: '+new Date(state.lastSuccess).toLocaleTimeString());
+      $('lamp').textContent='🟡';setText('signal','ESPERAR');$('signal').className='yellow';
+      ['price','closeEstimate','open','high','low','momentum','ema9','ema21','rsi','vwap','atr','confidence','entry','stop','target'].forEach(id=>setText(id,'—'));
+    } else if(!state.lastSuccess) {
+      setText('reason','No hay una lectura fresca del mercado. Se volverá a intentar automáticamente.');
+    }
+  } finally {state.busy=false;}
+}
+function render() {
+  const candles=state.candles, price=state.price, current=candles[candles.length-1];
+  const closes=candles.map(c=>c.close);
+  const e9=ema(closes.slice(-Math.max(9,closes.length)),9), e21=ema(closes,21), rr=rsi(closes,14), aa=atr(candles,14), vv=vwap(candles);
+  const momentum=candles.length>=2?(price-candles[candles.length-2].close)/candles[candles.length-2].close*100:NaN;
+  const candleStart=Math.floor(Date.now()/(15*60*1000))*(15*60*1000), remaining=Math.max(0,candleStart+15*60*1000-Date.now());
+  const mins=Math.floor(remaining/60000), secs=Math.floor((remaining%60000)/1000);
+  setText('price',fmt(price));setText('open',fmt(current.open));setText('high',fmt(current.high));setText('low',fmt(current.low));
+  setText('closeEstimate',fmt(price));setText('countdown',String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0'));
+  setText('momentum',(momentum>=0?'+':'')+fmtNum(momentum,3)+'%');
+  setText('ema9',fmt(e9));setText('ema21',fmt(e21));setText('rsi',fmtNum(rr,1));setText('vwap',fmt(vv));setText('atr',fmt(aa));
+  setConnection('CONECTADO · '+state.source,'#32d583');
+  setText('sourceLine','Fuente activa: '+state.source+' · velas de 15 minutos');
+  setText('updatedLine','Última actualización: '+new Date(state.lastSuccess).toLocaleTimeString());
+  let bull=0,bear=0;
+  if(Number.isFinite(e9)&&Number.isFinite(e21)){if(e9>e21)bull++;else if(e9<e21)bear++;}
+  if(price>vv)bull++;else if(price<vv)bear++;
+  if(rr>=54)bull++;else if(rr<=46)bear++;
+  if(momentum>0.035)bull++;else if(momentum< -0.035)bear++;
+  if(current.close>current.open)bull++;else if(current.close<current.open)bear++;
+  const total=bull+bear, conf=total?Math.round(Math.max(bull,bear)/total*100):0;
+  let sig='ESPERAR', reason='Los indicadores están mezclados; esperar una lectura más clara.', cls='yellow', lamp='🟡';
+  if(bull>=4 && bull-bear>=2){sig='SUBE';reason='Coincidencia alcista de varios indicadores. No garantiza que el precio suba.';cls='green';lamp='🟢';}
+  else if(bear>=4 && bear-bull>=2){sig='BAJA';reason='Coincidencia bajista de varios indicadores. No garantiza que el precio baje.';cls='red';lamp='🔴';}
+  if(!Number.isFinite(aa)||!Number.isFinite(rr)||!Number.isFinite(e21)||!Number.isFinite(vv)){sig='ESPERAR';reason='Reuniendo suficientes velas para calcular los indicadores.';cls='yellow';lamp='🟡';}
+  setText('signal',sig);$('signal').className=cls;setText('reason',reason);setText('lamp',lamp);
+  setText('confidence',total?conf+'%':'—');
+  if(sig!=='ESPERAR'&&Number.isFinite(aa)&&aa>0){
+    const entry=price, stop=sig==='SUBE'?price-1.2*aa:price+1.2*aa, target=sig==='SUBE'?price+1.8*aa:price-1.8*aa;
+    setText('entry',fmt(entry));setText('stop',fmt(stop));setText('target',fmt(target));
+    setText('levelsNote','Niveles ilustrativos basados en ATR; confirma el contrato y el precio real antes de operar.');
+  } else {
+    ['entry','stop','target'].forEach(id=>setText(id,'—'));
+    setText('levelsNote','No hay señal suficientemente clara; no se proponen niveles nuevos.');
+  }
+  addHistory({time:new Date().toLocaleTimeString(),source:state.source,price,sig});
+}
+function addHistory(item){
+  const last=state.history[state.history.length-1];
+  if(last && last.source===item.source && last.sig===item.sig && Math.abs(last.price-item.price)<0.01) return;
+  state.history.push(item);state.history=state.history.slice(-8);
+  const body=$('history');body.innerHTML='';
+  [...state.history].reverse().forEach(h=>{
+    const tr=document.createElement('tr');
+    [h.time,h.source,fmt(h.price),h.sig].forEach((v,i)=>{const td=document.createElement('td');td.textContent=v;if(i===3)td.style.color=h.sig==='SUBE'?'var(--green)':h.sig==='BAJA'?'var(--red)':'var(--yellow)';tr.appendChild(td);});
+    body.appendChild(tr);
+  });
+}
+$('refreshBtn').addEventListener('click',loadMarket);
+$('resetBtn').addEventListener('click',()=>{state.history=[];$('history').innerHTML='<tr><td colspan="4">Historial borrado.</td></tr>';});
+loadMarket();
+setInterval(loadMarket,5000);
+setInterval(()=>{if(state.lastSuccess) setText('countdown',(()=>{const end=(Math.floor(Date.now()/900000)+1)*900000;const r=Math.max(0,end-Date.now());return String(Math.floor(r/60000)).padStart(2,'0')+':'+String(Math.floor((r%60000)/1000)).padStart(2,'0')})());},1000);
+})();
+</script>
+</body>
+</html>
