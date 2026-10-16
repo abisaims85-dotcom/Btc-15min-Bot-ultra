@@ -1,0 +1,375 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d14">
+<title>BTC 15-Min PRO V5.5 FIX</title>
+<style>
+:root{--bg:#090d14;--card:#111824;--card2:#0d141f;--line:#263142;--text:#f4f7fb;--muted:#96a3b7;--green:#32d583;--red:#ff5d68;--yellow:#ffce4a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:18px 12px 32px}
+main{max-width:820px;margin:auto}
+h1{font-size:clamp(24px,5vw,32px);margin:5px 0}
+.sub,.small{color:var(--muted);font-size:13px;line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0}
+.signal{text-align:center;padding:22px 12px}
+.lamp{font-size:48px}
+.signal h2{font-size:clamp(28px,6vw,38px);margin:5px}
+.signal p{margin:5px 0;color:var(--muted);line-height:1.45}
+.green{color:var(--green)}.red{color:var(--red)}.yellow{color:var(--yellow)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.price{font-size:clamp(28px,6vw,36px);font-weight:800;margin-top:5px}
+.badge{border-radius:999px;background:#1b2636;padding:8px 10px;font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:14px}
+.metric{min-width:0;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.label{color:var(--muted);font-size:12px;margin-bottom:7px}
+.value{font-size:clamp(17px,4vw,23px);font-weight:700;overflow-wrap:anywhere}
+.triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.triple .metric{padding:10px}
+.triple .value{font-size:clamp(15px,3.7vw,20px)}
+button{border:1px solid var(--line);background:#1b293d;color:white;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:700}
+button:active{transform:scale(.99)}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:9px 5px;border-bottom:1px solid var(--line)}
+.notice{background:#191b20;border-left:3px solid var(--yellow);border-radius:8px;padding:10px;font-size:12px;color:#c5ceda;line-height:1.5}
+footer{text-align:center;color:#78869a;font-size:11px;padding:8px}
+@media(max-width:390px){.card{padding:13px}.grid{gap:7px}.metric{padding:10px}.triple{gap:5px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>₿ BTC 15-Min PRO V5.5 FIX</h1>
+<div class="sub">Binance principal · Coinbase respaldo · señales tempranas</div>
+</header>
+
+<section class="card signal" aria-live="polite">
+<div class="lamp" id="lamp">🟡</div>
+<h2 id="signal" class="yellow">ESPERAR</h2>
+<p id="reason">Conectando con Binance…</p>
+<div class="small" id="score">Esperando indicadores</div>
+</section>
+
+<section class="card">
+<div class="top">
+<div><div class="small">BTC/USDT · precio de referencia</div><div class="price" id="price">—</div></div>
+<div class="badge" id="connection">CONECTANDO</div>
+</div>
+<div class="grid">
+<div class="metric"><div class="label">Tiempo restante de vela</div><div class="value" id="countdown">—</div></div>
+<div class="metric"><div class="label">Precio actual</div><div class="value" id="estimate">—</div></div>
+<div class="metric"><div class="label">Apertura de vela</div><div class="value" id="open">—</div></div>
+<div class="metric"><div class="label">Máximo / mínimo</div><div class="value" id="range">—</div></div>
+<div class="metric"><div class="label">Momentum 3 velas</div><div class="value" id="momentum">—</div></div>
+<div class="metric"><div class="label">Última actualización</div><div class="value" id="updated">—</div></div>
+</div>
+<div class="small" id="sourceLine" style="margin-top:10px">Intentando conectar…</div>
+</section>
+
+<section class="card">
+<div class="grid" style="margin-top:0">
+<div class="metric"><div class="label">EMA 9</div><div class="value" id="ema9">—</div></div>
+<div class="metric"><div class="label">EMA 21</div><div class="value" id="ema21">—</div></div>
+<div class="metric"><div class="label">RSI 14</div><div class="value" id="rsi">—</div></div>
+<div class="metric"><div class="label">VWAP aproximado</div><div class="value" id="vwap">—</div></div>
+<div class="metric"><div class="label">ATR 14</div><div class="value" id="atr">—</div></div>
+<div class="metric"><div class="label">Confianza del modelo</div><div class="value" id="confidence">—</div></div>
+</div>
+</section>
+
+<section class="card">
+<div class="small" style="margin-bottom:12px">NIVELES ILUSTRATIVOS · solo con señal direccional</div>
+<div class="triple">
+<div class="metric"><div class="label">ENTRADA</div><div class="value" id="entry">—</div></div>
+<div class="metric"><div class="label">STOP LOSS</div><div class="value" id="stop">—</div></div>
+<div class="metric"><div class="label">TAKE PROFIT</div><div class="value" id="target">—</div></div>
+</div>
+<div class="small" id="levelsNote" style="margin-top:10px">Esperando una señal válida.</div>
+</section>
+
+<section class="card">
+<div class="small" style="margin-bottom:10px">HISTORIAL RECIENTE</div>
+<div style="overflow-x:auto">
+<table>
+<thead><tr><th>Hora</th><th>Fuente</th><th>Precio</th><th>Señal</th></tr></thead>
+<tbody id="history"><tr><td colspan="4">Esperando datos…</td></tr></tbody>
+</table>
+</div>
+<div class="actions">
+<button id="refresh">Actualizar ahora</button>
+<button id="clear">Borrar historial</button>
+</div>
+</section>
+
+<section class="card">
+<div class="notice"><b>Importante:</b> herramienta experimental. No coloca órdenes ni garantiza resultados. Una señal no predice el precio de liquidación de Kalshi. Si los datos fallan o están atrasados, se ocultan las señales direccionales.</div>
+<p class="small">Fuentes: Binance BTC/USDT y Coinbase BTC/USD. Los precios pueden ser diferentes.</p>
+</section>
+<footer>V5.5 FIX · Comprueba el contrato antes de operar.</footer>
+</main>
+
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const state={candles:[],price:NaN,source:'',last:0,busy:false,history:[]};
+const INTERVAL=900000, UPDATE_MS=5000, MAX_AGE=20000;
+const fmt=n=>Number.isFinite(n)?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+const num=(n,d=2)=>Number.isFinite(n)?n.toFixed(d):'—';
+const put=(id,v)=>$(id).textContent=v;
+
+function ema(vals,p){
+ if(vals.length<p)return NaN;
+ const k=2/(p+1);let e=vals[0];
+ for(let i=1;i<vals.length;i++)e=vals[i]*k+e*(1-k);
+ return e;
+}
+function rsi(vals,p=14){
+ if(vals.length<p+1)return NaN;
+ let g=0,l=0;
+ for(let i=vals.length-p;i<vals.length;i++){
+  const d=vals[i]-vals[i-1];
+  if(d>0)g+=d;else l-=d;
+ }
+ if(l===0)return g===0?50:100;
+ if(g===0)return 0;
+ return 100-100/(1+g/l);
+}
+function atr(cs,p=14){
+ if(cs.length<p+1)return NaN;
+ const a=[];
+ for(let i=cs.length-p;i<cs.length;i++){
+  const c=cs[i],pr=cs[i-1];
+  a.push(Math.max(c.high-c.low,Math.abs(c.high-pr.close),Math.abs(c.low-pr.close)));
+ }
+ return a.reduce((x,y)=>x+y,0)/a.length;
+}
+function vwap(cs){
+ const s=cs.slice(-20);let pv=0,vv=0;
+ for(const c of s){
+  const v=Number.isFinite(c.volume)&&c.volume>0?c.volume:1;
+  pv+=(c.high+c.low+c.close)/3*v;vv+=v;
+ }
+ return vv?pv/vv:NaN;
+}
+async function json(url,ms=6500){
+ const ctl=new AbortController();
+ const timer=setTimeout(()=>ctl.abort(),ms);
+ try{
+  const r=await fetch(url,{cache:'no-store',signal:ctl.signal,headers:{Accept:'application/json'}});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  return await r.json();
+ }finally{clearTimeout(timer)}
+}
+function parseBinance(d){
+ if(!Array.isArray(d)||d.length<25)throw Error('Historial Binance insuficiente');
+ return d.map(a=>({
+  time:+a[0],open:+a[1],high:+a[2],low:+a[3],close:+a[4],volume:+a[5]
+ })).filter(c=>[c.time,c.open,c.high,c.low,c.close,c.volume].every(Number.isFinite));
+}
+async function binance(){
+ const [d,t]=await Promise.all([
+  json('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=100'),
+  json('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+ ]);
+ const cs=parseBinance(d),p=+t.price;
+ if(!Number.isFinite(p)||p<=0)throw Error('Precio Binance inválido');
+ return{candles:cs,price:p,source:'Binance BTC/USDT'};
+}
+async function coinbase(){
+ const end=Date.now(),start=end-36*60*60*1000;
+ const base='https://api.exchange.coinbase.com/products/BTC-USD';
+ const qs='?granularity=900&start='+encodeURIComponent(new Date(start).toISOString())+'&end='+encodeURIComponent(new Date(end).toISOString());
+ const [d,t]=await Promise.all([
+  json(base+'/candles'+qs),
+  json(base+'/ticker')
+ ]);
+ if(!Array.isArray(d)||d.length<25)throw Error('Historial Coinbase insuficiente');
+ // Coinbase Exchange: [segundos, mínimo, máximo, apertura, cierre, volumen]
+ const cs=d.map(a=>({
+  time:+a[0]*1000,low:+a[1],high:+a[2],open:+a[3],close:+a[4],volume:+a[5]
+ })).filter(c=>[c.time,c.open,c.high,c.low,c.close,c.volume].every(Number.isFinite))
+ .sort((a,b)=>a.time-b.time);
+ const p=+t.price;
+ if(!Number.isFinite(p)||p<=0)throw Error('Precio Coinbase inválido');
+ return{candles:cs,price:p,source:'Coinbase BTC/USD'};
+}
+function connection(s,color){
+ put('connection',s);$('connection').style.color=color||'var(--muted)';
+}
+function clearMarket(msg){
+ put('lamp','🟡');put('signal','ESPERAR');
+ $('signal').className='yellow';put('reason',msg);
+ ['price','estimate','open','range','momentum','ema9','ema21','rsi','vwap','atr','confidence','entry','stop','target'].forEach(id=>put(id,'—'));
+ put('score','Sin datos actuales verificados');
+ put('levelsNote','Sin datos frescos: niveles ocultos.');
+}
+async function update(){
+ if(state.busy)return;
+ state.busy=true;
+ const errors=[];
+ try{
+  let data=null;
+  // Fuente principal y respaldo. No se mezclan velas de distintas fuentes.
+  for(const fn of [binance,coinbase]){
+   try{
+    const d=await fn(),now=Date.now();
+    if(!Array.isArray(d.candles)||d.candles.length<25)throw Error('Velas insuficientes');
+    const cs=d.candles.map(c=>({...c})).sort((a,b)=>a.time-b.time);
+    const candleStart=Math.floor(now/INTERVAL)*INTERVAL;
+    const latest=cs[cs.length-1];
+    if(!Number.isFinite(latest.time)||now-latest.time>INTERVAL+60000)
+     throw Error('Velas atrasadas');
+    let cur=cs.find(x=>x.time===candleStart);
+    if(!cur){
+     if(latest.time<candleStart)throw Error('La fuente aún no publicó la vela actual');
+     cur=latest;
+    }
+    // El precio en vivo actualiza la vela actual, no las velas anteriores.
+    cur.close=d.price;
+    cur.high=Math.max(cur.high,d.price);
+    cur.low=Math.min(cur.low,d.price);
+    data={candles:cs,price:d.price,source:d.source,last:now};
+    break;
+   }catch(e){errors.push(fn.name+': '+(e.message||'error'))}
+  }
+  if(!data){
+   connection('SIN DATOS · REINTENTANDO','var(--yellow)');
+   put('sourceLine','Fallaron las fuentes: '+errors.join(' | '));
+   clearMarket('No hay datos actuales verificables. Reintentando automáticamente.');
+   return;
+  }
+  state.candles=data.candles;
+  state.price=data.price;
+  state.source=data.source;
+  state.last=data.last;
+  render();
+ }catch(e){
+  connection('ERROR · REINTENTANDO','var(--yellow)');
+  put('sourceLine',e.message||'Error al procesar datos.');
+  clearMarket('Error al procesar los datos. Reintentando.');
+ }finally{
+  state.busy=false;
+ }
+}
+function render(){
+ const cs=state.candles,p=state.price,now=Date.now();
+ if(!cs.length||!Number.isFinite(p)||now-state.last>MAX_AGE){
+  connection('DATOS VENCIDOS','var(--yellow)');
+  clearMarket('Los datos no están actualizados. Espera la siguiente conexión.');
+  return;
+ }
+ const c=cs[cs.length-1],cl=cs.map(x=>x.close);
+ const e9=ema(cl,9),e21=ema(cl,21),rr=rsi(cl),aa=atr(cs),vv=vwap(cs);
+ const mom=cs.length>=4?(p-cs[cs.length-4].close)/cs[cs.length-4].close*100:NaN;
+ const prior=cs[cs.length-2],prev3=cs[cs.length-3];
+ const left=Math.max(0,(Math.floor(now/INTERVAL)+1)*INTERVAL-now);
+
+ put('price',fmt(p));put('estimate',fmt(p));put('open',fmt(c.open));
+ put('range',fmt(c.high)+' / '+fmt(c.low));
+ put('momentum',(mom>0?'+':'')+num(mom,3)+'%');
+ put('ema9',fmt(e9));put('ema21',fmt(e21));put('rsi',num(rr,1));
+ put('vwap',fmt(vv));put('atr',fmt(aa));
+ put('countdown',String(Math.floor(left/60000)).padStart(2,'0')+':'+String(Math.floor(left%60000/1000)).padStart(2,'0'));
+ put('updated',new Date(state.last).toLocaleTimeString());
+ connection('CONECTADO · '+state.source,'var(--green)');
+ put('sourceLine','Datos recibidos. Revisión automática cada 5 segundos.');
+
+ if(![e9,e21,rr,aa,vv,mom].every(Number.isFinite)){
+  clearMarket('Reuniendo datos suficientes para calcular indicadores.');
+  return;
+ }
+
+ let bull=0,bear=0;
+ const vote=(up,down)=>{if(up)bull++;else if(down)bear++;};
+ vote(e9>e21,e9<e21);
+ vote(p>e9,p<e9);
+ vote(p>vv,p<vv);
+ vote(rr>=52,rr<=48);
+ vote(mom>=0.025,mom<=-0.025);
+ vote(p>c.open,p<c.open);
+ vote(!!(prior&&prev3&&p>prior.close&&prior.close>prev3.close),
+      !!(prior&&prev3&&p<prior.close&&prior.close<prev3.close));
+
+ // Señales rápidas de pérdida de fuerza: primero ESPERAR, no BAJA automática.
+ const weakening=
+  p<e9 ||
+  mom<=-0.015 ||
+  rr<48 ||
+  (p<c.open&&prior&&p<prior.close);
+
+ const strongUp=
+  bull>=5&&bull-bear>=3&&p>e9&&mom>0.015&&rr>=50&&!weakening;
+
+ const strongDown=
+  bear>=5&&bear-bull>=3&&p<e9&&mom< -0.015&&rr<=50;
+
+ let sig='ESPERAR',reason='Las señales no coinciden lo suficiente. Espera.';
+ let cls='yellow',lamp='🟡';
+ let conf=Math.round(Math.max(bull,bear)/7*100);
+
+ if(strongDown){
+  sig='BAJA';reason='Presión bajista confirmada por varios indicadores.';
+  cls='red';lamp='🔴';
+ }else if(weakening){
+  reason='El precio pierde fuerza. Se pausa SUBE antes de una posible caída.';
+  conf=Math.max(conf,45);
+ }else if(strongUp){
+  sig='SUBE';reason='Varias señales alcistas coinciden y el precio conserva fuerza.';
+  cls='green';lamp='🟢';
+ }else{
+  reason='Todavía no hay confirmación suficiente para SUBE o BAJA.';
+ }
+
+ put('signal',sig);$('signal').className=cls;
+ put('lamp',lamp);put('reason',reason);
+ put('score','Votos alcistas: '+bull+' · bajistas: '+bear);
+ put('confidence',conf+'%');
+
+ if(sig!=='ESPERAR'&&aa>0){
+  put('entry',fmt(p));
+  put('stop',fmt(sig==='SUBE'?p-1.2*aa:p+1.2*aa));
+  put('target',fmt(sig==='SUBE'?p+1.8*aa:p-1.8*aa));
+  put('levelsNote','Niveles ilustrativos basados en ATR; no son órdenes.');
+ }else{
+  ['entry','stop','target'].forEach(id=>put(id,'—'));
+  put('levelsNote','Sin señal direccional confirmada; niveles ocultos.');
+ }
+ addHistory({time:new Date().toLocaleTimeString(),source:state.source,price:p,sig});
+}
+function addHistory(h){
+ const last=state.history[state.history.length-1];
+ if(last&&last.source===h.source&&last.sig===h.sig&&Math.abs(last.price-h.price)<1)return;
+ state.history.push(h);state.history=state.history.slice(-8);
+ const body=$('history');body.innerHTML='';
+ [...state.history].reverse().forEach(h=>{
+  const tr=document.createElement('tr');
+  [h.time,h.source,fmt(h.price),h.sig].forEach((v,i)=>{
+   const td=document.createElement('td');td.textContent=v;
+   if(i===3)td.style.color=h.sig==='SUBE'?'var(--green)':h.sig==='BAJA'?'var(--red)':'var(--yellow)';
+   tr.appendChild(td);
+  });
+  body.appendChild(tr);
+ });
+}
+$('refresh').addEventListener('click',update);
+$('clear').addEventListener('click',()=>{
+ state.history=[];
+ $('history').innerHTML='<tr><td colspan="4">Historial borrado.</td></tr>';
+});
+update();
+setInterval(update,UPDATE_MS);
+setInterval(()=>{
+ const left=Math.max(0,(Math.floor(Date.now()/INTERVAL)+1)*INTERVAL-Date.now());
+ put('countdown',String(Math.floor(left/60000)).padStart(2,'0')+':'+String(Math.floor(left%60000/1000)).padStart(2,'0'));
+ if(state.last&&Date.now()-state.last>MAX_AGE){
+  connection('DATOS VENCIDOS','var(--yellow)');
+  clearMarket('Los datos dejaron de actualizarse. No uses la señal anterior.');
+ }
+},1000);
+})();
+</script>
+</body>
+</html>
