@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d14">
+<title>BTC 15-Min PRO V5.7 DIAGNÓSTICO</title>
+<style>
+:root{color-scheme:dark;--bg:#090d14;--card:#111824;--line:#263142;--text:#f4f7fb;--muted:#91a0b5;--green:#31d887;--red:#ff5e68;--yellow:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:16px;max-width:720px;margin:auto}
+h1{font-size:22px;margin:6px 0}.sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.status{font-size:13px;color:var(--muted)}.signal{font-size:30px;font-weight:800;margin:10px 0}.price{font-size:30px;font-weight:750;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:#0d141f;border-radius:12px;padding:12px}.label{font-size:12px;color:var(--muted);margin-bottom:5px}.value{font-size:17px;font-weight:650;overflow-wrap:anywhere}
+.green{color:var(--green)}.red{color:var(--red)}.yellow{color:var(--yellow)}button{width:100%;border:0;border-radius:12px;padding:14px;background:#263a53;color:white;font-size:16px;font-weight:700;margin-top:10px}
+.note{font-size:12px;color:var(--muted);line-height:1.5}.error{color:var(--yellow);font-size:13px;line-height:1.5}
+</style>
+</head>
+<body>
+<h1>₿ BTC 15-Min PRO V5.7 DIAGNÓSTICO</h1>
+<div class="sub">Binance principal · Binance US segundo intento · Coinbase respaldo · señales revisadas cada 5 segundos · sin órdenes automáticas</div>
+<section class="card">
+  <div id="status" class="status">Conectando a fuentes públicas…</div>
+  <div id="signal" class="signal yellow">🟡 ESPERAR</div>
+  <div id="reason" class="note">Esperando datos reales para calcular la señal.</div>
+  <div style="margin-top:16px" class="label">PRECIO BTC</div>
+  <div id="price" class="price">--</div>
+  <div id="updated" class="status" style="margin-top:6px">Última actualización: --</div>
+</section>
+<section class="card">
+  <div class="grid">
+    <div class="metric"><div class="label">EMA 9</div><div id="ema9" class="value">--</div></div>
+    <div class="metric"><div class="label">EMA 21</div><div id="ema21" class="value">--</div></div>
+    <div class="metric"><div class="label">RSI 14</div><div id="rsi" class="value">--</div></div>
+    <div class="metric"><div class="label">Cambio últimas 3 velas</div><div id="momentum" class="value">--</div></div>
+    <div class="metric"><div class="label">Movimiento en vivo (5 s)</div><div id="liveMove" class="value">--</div></div>
+    <div class="metric"><div class="label">Entrada orientativa</div><div id="entry" class="value">--</div></div>
+    <div class="metric"><div class="label">Stop Loss orientativo</div><div id="sl" class="value">--</div></div>
+    <div class="metric"><div class="label">Take Profit orientativo</div><div id="tp" class="value">--</div></div>
+    <div class="metric"><div class="label">Confianza técnica</div><div id="confidence" class="value">--</div></div>
+  </div>
+</section>
+<section class="card">
+  <div class="label">DIAGNÓSTICO DE CONEXIÓN</div>
+  <div id="diagnostic" class="error">Probando Binance y Coinbase…</div>
+  <button id="retry">Reintentar conexión ahora</button>
+  <p class="note">Las señales son experimentales y pueden fallar. No garantizan el resultado de una vela ni son una recomendación financiera. Confirma el precio y las reglas del contrato de Kalshi antes de operar.</p>
+</section>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const fmt = n => Number.isFinite(n) ? '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '--';
+  const num = n => Number.isFinite(n) ? n.toFixed(1) : '--';
+  let busy=false, previousPrice=null, previousPreviousPrice=null, lastSignal='WAIT';
+  let recoveryCount=0, declineCount=0, lastSource='', lastDataTime=0;
+  const PRICE_HISTORY_LIMIT=8, priceHistory=[];
+
+  async function fetchJSON(url, timeout=6000){
+    const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),timeout);
+    try{
+      const r=await fetch(url,{cache:'no-store',signal:controller.signal,mode:'cors'});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return await r.json();
+    }finally{clearTimeout(timer);}
+  }
+  function cleanCandles(rows,mapper){
+    return rows.map(mapper).filter(c=>[c.time,c.open,c.high,c.low,c.close,c.volume].every(Number.isFinite)&&c.close>0&&c.high>=c.low&&c.low>0);
+  }
+  async function getBinance(base,label){
+    const [raw,ticker]=await Promise.all([
+      fetchJSON(base+'/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=100'),
+      fetchJSON(base+'/api/v3/ticker/price?symbol=BTCUSDT')
+    ]);
+    if(!Array.isArray(raw)||raw.length<25)throw new Error(label+': velas insuficientes');
+    const candles=cleanCandles(raw,x=>({time:+x[0],open:+x[1],high:+x[2],low:+x[3],close:+x[4],volume:+x[5]}));
+    const price=+ticker.price;
+    if(candles.length<25||!Number.isFinite(price)||price<=0)throw new Error(label+': datos inválidos');
+    return {source:label+' BTC/USDT',price,candles,serverTime:Date.now()};
+  }
+  async function getCoinbase(){
+    const [spot,candleData]=await Promise.all([
+      fetchJSON('https://api.coinbase.com/v2/prices/BTC-USD/spot'),
+      fetchJSON('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=900')
+    ]);
+    if(!Array.isArray(candleData))throw new Error('Coinbase: formato de velas inesperado');
+    const candles=cleanCandles(candleData,x=>({time:+x[0]*1000,low:+x[1],high:+x[2],open:+x[3],close:+x[4],volume:+x[5]})).sort((a,b)=>a.time-b.time);
+    const price=+spot?.data?.amount;
+    if(candles.length<25||!Number.isFinite(price)||price<=0)throw new Error('Coinbase: datos insuficientes');
+    return {source:'Coinbase BTC/USD',price,candles,serverTime:Date.now()};
+  }
+  async function getMarket(){
+    const errors=[];
+    // Binance principal; Binance US como segundo intento; Coinbase como respaldo final.
+    for(const provider of [
+      ()=>getBinance('https://api.binance.com','Binance'),
+      ()=>getBinance('https://api.binance.us','Binance US'),
+      getCoinbase
+    ]){
+      try{return await provider();}catch(e){errors.push((e?.message||'error').slice(0,100));}
+    }
+    throw new Error(errors.join(' | ')||'Ninguna fuente respondió');
+  }
+  function ema(values,period){
+    if(values.length<period)return NaN;
+    const k=2/(period+1);let e=values.slice(0,period).reduce((a,b)=>a+b,0)/period;
+    for(let i=period;i<values.length;i++)e=values[i]*k+e*(1-k);
+    return e;
+  }
+  function rsi(values,period=14){
+    if(values.length<=period)return NaN;
+    let gain=0,loss=0;
+    for(let i=values.length-period;i<values.length;i++){const d=values[i]-values[i-1];if(d>0)gain+=d;else loss-=d;}
+    if(loss===0)return gain===0?50:100;
+    return 100-100/(1+gain/loss);
+  }
+  function showSignal(data){
+    const candles=data.candles.filter(c=>Number.isFinite(c.close)&&c.close>0).sort((a,b)=>a.time-b.time);
+    if(candles.length<25)throw new Error('No hay suficientes velas para indicadores');
+    const closes=candles.map(c=>c.close), price=data.price;
+    const e9=ema(closes,9),e21=ema(closes,21),rr=rsi(closes,14);
+    const c0=closes.at(-1),c1=closes.at(-2),c2=closes.at(-3),c3=closes.at(-4);
+    const momentum=(c0/c3-1)*100;
+    const liveVsCandle=(price/c0-1)*100;
+    const tickMove=previousPrice===null?0:(price/previousPrice-1)*100;
+    const tickMove2=previousPreviousPrice===null?0:(price/previousPreviousPrice-1)*100;
+    const changed=previousPrice!==null && Math.abs(price-previousPrice)>0.000001;
+    priceHistory.push({price,time:Date.now()});
+    while(priceHistory.length>PRICE_HISTORY_LIMIT)priceHistory.shift();
+
+    // Umbrales pequeños pero no cero: filtran ruido y detectan movimiento temprano.
+    const liveUp=previousPrice!==null && tickMove>0.0015;
+    const liveDown=previousPrice!==null && tickMove< -0.0015;
+    const shortUp=previousPreviousPrice!==null && tickMove2>0.0025;
+    const shortDown=previousPreviousPrice!==null && tickMove2< -0.0025;
+    const aboveFast=price>e9,belowFast=price<e9,trendDown=e9<e21,trendUp=e9>e21;
+    const risingCandle=price>c0 && liveVsCandle>0.002;
+    const fallingCandle=price<c0 && liveVsCandle< -0.002;
+    const bullishPoints=(aboveFast?1:0)+(trendUp?1:0)+(momentum>0.01?1:0)+(rr>=48&&rr<75?1:0)+(price>c1?1:0)+(liveUp||shortUp?1:0)+(risingCandle?1:0);
+    const bearishPoints=(belowFast?1:0)+(trendDown?1:0)+(momentum< -0.01?1:0)+(rr<48?1:0)+(price<c1?1:0)+(liveDown||shortDown?1:0)+(fallingCandle?1:0);
+
+    // Recuperación temprana: basta con movimiento ascendente repetido o rebote visible
+    // para retirar BAJA; para SUBE se exige confirmación adicional.
+    const recoveryEvidence=(liveUp?1:0)+(shortUp?1:0)+(risingCandle?1:0)+(price>c1?1:0)+(rr>=48?1:0);
+    const fallEvidence=(liveDown?1:0)+(shortDown?1:0)+(fallingCandle?1:0)+(price<c1?1:0)+(price<e9?1:0);
+    const recovery=recoveryEvidence>=2 && (liveUp||shortUp||risingCandle);
+    const renewedFall=fallEvidence>=3 && (liveDown||shortDown||fallingCandle);
+    if(recovery){recoveryCount++;declineCount=0;}
+    else if(renewedFall){declineCount++;recoveryCount=0;}
+    else {recoveryCount=Math.max(0,recoveryCount-1);declineCount=Math.max(0,declineCount-1);}
+
+    let signal='WAIT',label='🟡 ESPERAR',reason='Las señales están mezcladas; espera una dirección más clara.',cls='yellow',confidence=50;
+    // Decisión corregida: la tendencia de las velas puede dar señal aunque el ticker
+    // no cambie mucho en una sola lectura de 5 segundos.
+    const bullScore=(aboveFast?1:0)+(trendUp?1:0)+(momentum>0?1:0)+(rr>=50?1:0)+(price>=c1?1:0)+(risingCandle?1:0)+(liveUp||shortUp?1:0);
+    const bearScore=(belowFast?1:0)+(trendDown?1:0)+(momentum<0?1:0)+(rr<50?1:0)+(price<c1?1:0)+(fallingCandle?1:0)+(liveDown||shortDown?1:0);
+    const bullishStructure=aboveFast && (trendUp || momentum>0);
+    const bearishStructure=belowFast && (trendDown || momentum<0);
+    const earlyRecovery=(bullScore>=3 && (risingCandle || price>c1 || liveUp || shortUp));
+    const earlyWeakness=(bearScore>=3 && (fallingCandle || price<c1 || liveDown || shortDown));
+
+    if(lastSignal==='DOWN' && (earlyRecovery || bullScore>=bearScore+1)){
+      signal='WAIT';label='🟡 ESPERAR';reason='El precio muestra recuperación frente a BAJA; se cancela la señal bajista y se espera confirmación.';cls='yellow';confidence=57;
+    } else if(lastSignal==='UP' && (earlyWeakness || bearScore>=bullScore+1)){
+      signal='WAIT';label='🟡 ESPERAR';reason='SUBE pierde fuerza: se retira la señal antes de confirmar una caída.';cls='yellow';confidence=57;
+    } else if(bearScore>=4 && bearScore>bullScore && bearishStructure && !earlyRecovery){
+      signal='DOWN';label='🔴 BAJA';reason='La mayoría de señales apunta hacia abajo y el precio está debajo de EMA 9.';cls='red';confidence=Math.min(85,52+bearScore*4);
+    } else if(bullScore>=4 && bullScore>bearScore && bullishStructure && !earlyWeakness){
+      signal='UP';label='🟢 SUBE';reason='La mayoría de señales apunta hacia arriba y el precio sostiene la tendencia corta.';cls='green';confidence=Math.min(85,52+bullScore*4);
+    } else if(earlyRecovery || earlyWeakness || (lastSignal!=='WAIT' && bullScore===bearScore)){
+      signal='WAIT';label='🟡 ESPERAR';reason=earlyRecovery?'Se detecta intento de recuperación, pero falta confirmación para SUBE.':earlyWeakness?'Se detecta pérdida de fuerza, pero falta confirmación para BAJA.':'La dirección perdió claridad; señal retirada temporalmente.';cls='yellow';confidence=55;
+    } else if(bullScore>=3 && bullScore>bearScore && bullishStructure){
+      signal='UP';label='🟢 SUBE';reason='Sesgo alcista temprano: precio sobre EMA 9 y mayoría de señales positivas. Señal experimental.';cls='green';confidence=Math.min(78,50+bullScore*3);
+    } else if(bearScore>=3 && bearScore>bullScore && bearishStructure){
+      signal='DOWN';label='🔴 BAJA';reason='Sesgo bajista temprano: precio debajo de EMA 9 y mayoría de señales negativas. Señal experimental.';cls='red';confidence=Math.min(78,50+bearScore*3);
+    }
+    lastSignal=signal;
+    $('signal').textContent=label;$('signal').className='signal '+cls;$('reason').textContent=reason;
+    $('price').textContent=fmt(price);$('ema9').textContent=fmt(e9);$('ema21').textContent=fmt(e21);$('rsi').textContent=num(rr);
+    $('momentum').textContent=(momentum>=0?'+':'')+momentum.toFixed(3)+'%';$('momentum').className='value '+(momentum>0?'green':momentum<0?'red':'');
+    $('liveMove').textContent=(tickMove>=0?'+':'')+tickMove.toFixed(4)+'%';$('liveMove').className='value '+(tickMove>0?'green':tickMove<0?'red':'');
+    const recent=candles.slice(-14),ranges=recent.map(c=>Math.max(0,c.high-c.low));
+    const atr=ranges.reduce((a,b)=>a+b,0)/ranges.length,risk=Math.max(atr,price*0.0015);
+    $('entry').textContent=signal==='WAIT'?'Esperar':fmt(price);
+    $('sl').textContent=signal==='DOWN'?fmt(price+risk*1.05):signal==='UP'?fmt(price-risk*1.05):'--';
+    $('tp').textContent=signal==='DOWN'?fmt(price-risk*1.55):signal==='UP'?fmt(price+risk*1.55):'--';
+    $('confidence').textContent=Math.round(confidence)+'%';
+    $('status').textContent='● Conectado a '+data.source+' · lectura nueva';$('status').className='status green';
+    $('updated').textContent='Última actualización: '+new Date().toLocaleTimeString('es-US');
+    $('diagnostic').textContent='Fuente activa: '+data.source+'. Último precio: '+fmt(price)+'. '+(changed?'El precio cambió desde la lectura anterior.':'El precio no cambió desde la lectura anterior.')+' Puntos SUBE: '+bullScore+'/7 · Puntos BAJA: '+bearScore+'/7. Señal recalculada.';
+    previousPreviousPrice=previousPrice;previousPrice=price;lastSource=data.source;lastDataTime=Date.now();
+  }
+  async function update(){
+    if(busy)return;busy=true;$('status').textContent='Actualizando datos…';
+    try{
+      const data=await getMarket();
+      showSignal(data);
+    }catch(e){
+      lastSignal='WAIT';recoveryCount=0;declineCount=0;
+      $('status').textContent='SIN DATOS · REINTENTANDO';$('status').className='status red';
+      $('signal').textContent='🟡 ESPERAR';$('signal').className='signal yellow';
+      $('reason').textContent='No hay datos nuevos. La señal anterior se cancela por seguridad.';
+      $('price').textContent='--';['ema9','ema21','rsi','momentum','liveMove','entry','sl','tp','confidence'].forEach(id=>$(id).textContent='--');
+      $('updated').textContent='Última actualización: sin conexión';
+      $('diagnostic').textContent='Fallaron las fuentes. '+(e?.message||'Comprueba internet e inténtalo de nuevo.');
+      previousPrice=null;previousPreviousPrice=null;priceHistory.length=0;
+    }finally{busy=false;}
+  }
+  $('retry').addEventListener('click',update);
+  update();setInterval(update,5000);
+})();
+</script>
+</body>
+</html>
