@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d14">
+<title>BTC 15M ULTIMATE RADAR V6 FIX</title>
+<style>
+:root{color-scheme:dark;--bg:#090d14;--card:#111a27;--line:#263449;--muted:#91a0b5;--text:#eef4ff;--green:#43d895;--red:#ff6877;--yellow:#f2c568;--blue:#75b8ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0b1320,#080c12);color:var(--text);font:15px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;padding:14px;max-width:900px;margin:auto}
+header{padding:10px 2px 16px}h1{font-size:22px;margin:0 0 5px}small,.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;margin-bottom:10px}
+.hero{padding:20px;text-align:center;border-width:2px}.signal{font-size:32px;font-weight:900;letter-spacing:.4px;margin:4px 0}
+.green{color:var(--green)}.red{color:var(--red)}.yellow{color:var(--yellow)}.big{font-size:25px;font-weight:800}
+.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.value{font-size:19px;font-weight:750;margin-top:5px;overflow-wrap:anywhere}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.bar{height:9px;background:#263449;border-radius:20px;overflow:hidden;margin-top:8px}.bar>i{display:block;height:100%;width:0;background:var(--blue);border-radius:20px}
+.pill{border:1px solid var(--line);border-radius:99px;padding:5px 9px;font-size:12px;color:var(--muted)}
+input,button{font:inherit;border-radius:10px;border:1px solid var(--line);background:#0b1320;color:var(--text);padding:11px;width:100%}
+button{background:#183456;border-color:#315982;font-weight:750;margin-top:8px}button:active{opacity:.75}
+.metric{padding:11px;border:1px solid var(--line);border-radius:12px;background:#0d1521}.metric .value{font-size:17px}
+.meter{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin:9px 0}.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--yellow)}
+canvas{width:100%;height:180px;display:block}.foot{font-size:12px;line-height:1.5;color:var(--muted)}
+.signalLog{max-height:220px;overflow:auto;font-size:13px}.logrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #243247}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:520px){body{padding:10px}.grid{gap:8px}.card{padding:12px}.signal{font-size:28px}}
+</style>
+</head>
+<body>
+<header><div class="row"><div><h1>₿ BTC 15M · ULTIMATE RADAR V6</h1><small>Historial inmediato · señales tempranas · Binance en vivo</small></div><span class="pill" id="connection">INICIANDO</span></div></header>
+
+<section class="card hero" id="hero">
+<div class="label">DECISIÓN DEL RADAR</div><div class="signal yellow" id="signal">🟡 ESPERAR</div><div id="reason">Cargando historial del mercado…</div>
+<div class="row" style="margin-top:16px"><div><div class="label">Confianza técnica</div><div class="big" id="confidence">—%</div></div><div style="text-align:right"><div class="label">Puntuación</div><div class="big" id="score">—</div></div></div><div class="bar"><i id="confidenceBar"></i></div>
+</section>
+
+<section class="grid">
+<div class="metric"><div class="label">BTC / USDT</div><div class="value" id="price">—</div><small id="source">Fuente: esperando</small></div>
+<div class="metric"><div class="label">Movimiento 15m</div><div class="value" id="change15">—</div><small id="candleTime">Vela en formación</small></div>
+<div class="metric"><div class="label">Tiempo de ventana</div><div class="value" id="countdown">—</div><small>Reloj UTC de 15 minutos</small></div>
+<div class="metric"><div class="label">Distancia al objetivo</div><div class="value" id="distance">No configurado</div><small>Introduce el precio objetivo de Kalshi</small></div>
+</section>
+
+<section class="card"><div class="row"><b>Objetivo de Kalshi</b><span class="pill">Opcional</span></div>
+<small class="muted">Escribe el precio objetivo/strike que muestra tu contrato.</small>
+<div class="two" style="margin-top:8px"><input id="strike" type="number" inputmode="decimal" placeholder="Ej. 85000.00"><button id="saveStrike" style="margin:0">Guardar objetivo</button></div>
+<p class="foot">Binance es una referencia, no el índice oficial de liquidación de Kalshi. Confirma las reglas del contrato.</p></section>
+
+<section class="card"><b>Lectura técnica</b><div class="grid" style="margin-top:10px">
+<div class="metric"><div class="label">EMA 9 / 21</div><div class="value" id="ema">—</div></div>
+<div class="metric"><div class="label">RSI 14</div><div class="value" id="rsi">—</div></div>
+<div class="metric"><div class="label">VWAP</div><div class="value" id="vwap">—</div></div>
+<div class="metric"><div class="label">MACD hist.</div><div class="value" id="macd">—</div></div>
+<div class="metric"><div class="label">ATR 14</div><div class="value" id="atr">—</div></div>
+<div class="metric"><div class="label">Impulso 1m</div><div class="value" id="micro">—</div></div>
+</div></section>
+
+<section class="card"><b>Presión de mercado</b>
+<div class="meter"><span>Libro comprador / vendedor</span><b id="imbalance">—</b></div><div class="bar"><i id="bookBar"></i></div>
+<div class="meter"><span>Flujo de operaciones agresivas</span><b id="flow">—</b></div>
+<div class="meter"><span>Operaciones grandes estimadas</span><b id="whales">—</b></div>
+<div class="meter"><span>Order block cercano</span><b id="ob">—</b></div>
+<p class="foot">Las operaciones grandes son una estimación de operaciones públicas; no identifican billeteras ni participantes.</p></section>
+
+<section class="card"><b>Fuerza de cada factor</b><div id="factors"></div></section>
+<section class="card"><div class="row"><b>Precio en tiempo real</b><span class="pill" id="lastUpdate">Sin actualización</span></div><canvas id="chart" width="900" height="220"></canvas></section>
+<section class="card"><div class="row"><b>Plan de operación estimado</b><span class="pill">No es orden automática</span></div>
+<div class="grid" style="margin-top:10px">
+<div class="metric"><div class="label">Entrada de referencia</div><div class="value" id="entry">—</div></div>
+<div class="metric"><div class="label">Stop loss</div><div class="value" id="stop">—</div></div>
+<div class="metric"><div class="label">Objetivo 1</div><div class="value" id="target">—</div></div>
+<div class="metric"><div class="label">Riesgo estimado</div><div class="value" id="risk">—</div></div>
+</div></section>
+<section class="card"><div class="row"><b>Historial de señales</b><button id="clearLog" style="width:auto;margin:0;padding:7px 10px">Borrar</button></div><div class="signalLog" id="log"><div class="muted">Aún no hay señales registradas.</div></div></section>
+<p class="foot">Herramienta experimental. No garantiza resultados ni sustituye el precio oficial de liquidación de Kalshi. No envía órdenes. En mercados rápidos puede equivocarse; confirma siempre antes de operar.</p>
+
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
+const max=Math.max,min=Math.min,avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:NaN;
+const UPDATE_MS=1000,STALE_MS=15000;
+let ws=null,wsRetry=null,source='Binance',lastTick=0,price=0,prices=[],candles=[],candles5=[],candles15=[],trades=[],book={bids:[],asks:[]};
+let signal='WAIT',strike=0,lastHistoryLoad=0,restBusy=false,whaleCount=0;
+
+function text(id,v){$(id).textContent=v}
+function setConnection(s,color){text('connection',s);$('connection').style.color=color||'var(--muted)'}
+function normalizeKline(k){return {t:+k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5],closed:true}}
+function upsert(arr,c){let i=arr.findIndex(x=>x.t===c.t);if(i>=0)arr[i]=c;else{arr.push(c);arr.sort((a,b)=>a.t-b.t)}if(arr.length>300)arr.splice(0,arr.length-300)}
+async function fetchJSON(url,ms=7000){let ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),ms);try{let r=await fetch(url,{cache:'no-store',signal:ctl.signal});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(timer)}}
+
+async function loadBinanceHistory(base){
+  let [a,b,c,t]=await Promise.all([
+    fetchJSON(base+'/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=200'),
+    fetchJSON(base+'/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=100'),
+    fetchJSON(base+'/api/v3/klines?symbol=BTCUSDT&interval=15m&limit=100'),
+    fetchJSON(base+'/api/v3/ticker/price?symbol=BTCUSDT')
+  ]);
+  if(!Array.isArray(a)||a.length<30)throw Error('Historial incompleto');
+  candles=a.map(normalizeKline);candles5=b.map(normalizeKline);candles15=c.map(normalizeKline);
+  price=+t.price;source=base.includes('binance.us')?'Binance US':'Binance';lastTick=Date.now();lastHistoryLoad=Date.now();
+}
+async function loadCoinbaseHistory(){
+  const base='https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=';
+  const [a,b,c,t]=await Promise.all([
+    fetchJSON(base+'60'),fetchJSON(base+'300'),fetchJSON(base+'900'),
+    fetchJSON('https://api.exchange.coinbase.com/products/BTC-USD/ticker')
+  ]);
+  const cv=x=>({t:+x[0]*1000,l:+x[1],h:+x[2],o:+x[3],c:+x[4],v:+x[5],closed:true});
+  candles=a.map(cv).sort((x,y)=>x.t-y.t);candles5=b.map(cv).sort((x,y)=>x.t-y.t);candles15=c.map(cv).sort((x,y)=>x.t-y.t);
+  if(candles.length<30)throw Error('Coinbase sin historial suficiente');
+  price=+t.price;source='Coinbase respaldo';lastTick=Date.now();lastHistoryLoad=Date.now();
+}
+async function bootstrap(){
+  if(restBusy)return;restBusy=true;setConnection('CARGANDO HISTORIAL','var(--yellow)');
+  try{try{await loadBinanceHistory('https://api.binance.com')}catch(e){await loadBinanceHistory('https://api.binance.us')}
+    setConnection(source.toUpperCase()+' · HISTORIAL OK','var(--green)');
+  }catch(e){try{await loadCoinbaseHistory();setConnection('COINBASE · HISTORIAL OK','var(--yellow)')}catch(err){setConnection('SIN HISTORIAL','var(--red)');text('reason','No se pudieron descargar velas históricas. Reintentando…')}}
+  finally{restBusy=false;update()}
+}
+
+function connectWS(){
+  if(ws){try{ws.onclose=null;ws.close()}catch(e){}}
+  try{
+    const streams='btcusdt@aggTrade/btcusdt@bookTicker/btcusdt@kline_1m/btcusdt@kline_5m/btcusdt@kline_15m/btcusdt@depth5@100ms';
+    ws=new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
+    ws.onopen=()=>{if(source.startsWith('Binance'))setConnection('BINANCE EN VIVO','var(--green)')};
+    ws.onmessage=e=>{
+      let packet;try{packet=JSON.parse(e.data)}catch(err){return}
+      const d=packet.data,s=packet.stream||'';if(!d)return;
+      if(s.includes('aggTrade')){
+        const px=+d.p,q=+d.q;if(px>0){price=px;lastTick=Date.now();trades.push({p:px,q,buy:!d.m,t:Date.now()});if(trades.length>1200)trades.shift()}
+      }else if(s.includes('bookTicker')){
+        book.bids=[[+d.b,+d.B]];book.asks=[[+d.a,+d.A]];
+      }else if(s.includes('depth5')){
+        book.bids=(d.bids||[]).map(x=>[+x[0],+x[1]]);book.asks=(d.asks||[]).map(x=>[+x[0],+x[1]]);
+      }else if(s.includes('kline_')){
+        const k=d.k,c={t:+k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c,v:+k.v,closed:!!k.x};
+        if(k.i==='1m')upsert(candles,c);else if(k.i==='5m')upsert(candles5,c);else if(k.i==='15m')upsert(candles15,c);
+        lastTick=Date.now();
+      }
+    };
+    ws.onerror=()=>setConnection('RECUPERANDO CONEXIÓN','var(--yellow)');
+    ws.onclose=()=>{setConnection('REINTENTANDO BINANCE','var(--yellow)');clearTimeout(wsRetry);wsRetry=setTimeout(connectWS,3000)};
+  }catch(e){clearTimeout(wsRetry);wsRetry=setTimeout(connectWS,4000)}
+}
+
+async function coinbaseFallback(){
+  if(Date.now()-lastTick<10000)return;
+  try{const d=await fetchJSON('https://api.exchange.coinbase.com/products/BTC-USD/ticker',6000);const p=+d.price;if(p>0){price=p;lastTick=Date.now();source='Coinbase respaldo';setConnection('COINBASE RESPALDO','var(--yellow)');}}
+  catch(e){}
+}
+function ema(vals,p){if(vals.length<p)return NaN;const k=2/(p+1);let v=avg(vals.slice(0,p));for(let i=p;i<vals.length;i++)v=vals[i]*k+v*(1-k);return v}
+function rsi(vals,p=14){
+  if(vals.length<p+1)return NaN;let g=0,l=0;for(let i=vals.length-p;i<vals.length;i++){let d=vals[i]-vals[i-1];if(d>0)g+=d;else l-=d}
+  if(g===0&&l===0)return 50;if(l===0)return 100;if(g===0)return 0;return 100-100/(1+g/l);
+}
+function atr(cs,p=14){if(cs.length<p+1)return NaN;let tr=[];for(let i=cs.length-p;i<cs.length;i++){let c=cs[i],prev=cs[i-1];tr.push(max(c.h-c.l,Math.abs(c.h-prev.c),Math.abs(c.l-prev.c)))}return avg(tr)}
+function vwap(cs){let a=cs.slice(-60),pv=0,v=0;a.forEach(c=>{let tp=(c.h+c.l+c.c)/3;pv+=tp*c.v;v+=c.v});return v?pv/v:NaN}
+function macdHistogram(vals){
+  if(vals.length<35)return NaN;let diffs=[];
+  for(let i=26;i<=vals.length;i++){let part=vals.slice(0,i),a=ema(part,12),b=ema(part,26);if(Number.isFinite(a)&&Number.isFinite(b))diffs.push(a-b)}
+  if(diffs.length<9)return NaN;return diffs[diffs.length-1]-ema(diffs,9);
+}
+function orderPressure(){let b=book.bids.reduce((s,x)=>s+x[0]*x[1],0),a=book.asks.reduce((s,x)=>s+x[0]*x[1],0);return b+a?(b-a)/(b+a):0}
+function flowPressure(){
+  let recent=trades.filter(t=>Date.now()-t.t<60000),buy=0,sell=0,large=0;
+  recent.forEach(t=>{let val=t.p*t.q;if(t.buy)buy+=val;else sell+=val;if(val>50000)large++});
+  return {v:buy+sell?(buy-sell)/(buy+sell):0,large,n:recent.length};
+}
+function detectOB(){
+  if(candles15.length<8)return 'Cargando zonas…';let found='Sin zona clara';
+  for(let i=candles15.length-5;i>=max(1,candles15.length-20);i--){
+    let c=candles15[i],after=candles15.slice(i+1,i+4);if(after.length<2)continue;
+    let move=(after[after.length-1].c-c.c)/c.c;
+    if(c.c<c.o&&move>.003)found='Compradora '+fmt(c.l)+'–'+fmt(c.h);
+    if(c.c>c.o&&move<-.003)found='Vendedora '+fmt(c.l)+'–'+fmt(c.h);
+    if(found!=='Sin zona clara')break;
+  }return found;
+}
+function logSignal(s,why){
+  let row=document.createElement('div');row.className='logrow';row.innerHTML=`<b>${s==='UP'?'🟢 SUBE':s==='DOWN'?'🔴 BAJA':'🟡 ESPERAR'}</b><span>${new Date().toLocaleTimeString()} · ${fmt(price)}</span>`;
+  if($('log').firstElementChild?.classList.contains('muted'))$('log').innerHTML='';$('log').prepend(row);while($('log').children.length>30)$('log').lastElementChild.remove();
+}
+function draw(){
+  let c=$('chart'),ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);if(prices.length<2)return;
+  let a=prices.slice(-120),lo=Math.min(...a.map(x=>x.p)),hi=Math.max(...a.map(x=>x.p)),pad=(hi-lo)*.12||1;lo-=pad;hi+=pad;
+  ctx.strokeStyle='#43d895';ctx.lineWidth=3;ctx.beginPath();a.forEach((x,i)=>{let X=i/(a.length-1)*w,Y=h-(x.p-lo)/(hi-lo)*h;i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();
+  ctx.fillStyle='#91a0b5';ctx.font='18px sans-serif';ctx.fillText('$'+fmt(hi),8,20);ctx.fillText('$'+fmt(lo),8,h-8);
+}
+function update(){
+  if(!price||Date.now()-lastTick>STALE_MS){text('signal','🟡 ESPERAR');$('signal').className='signal yellow';$('hero').style.borderColor='var(--yellow)';text('reason','Sin precio reciente: no operar hasta recuperar conexión.');return}
+  if(candles.length<35){text('price','$'+fmt(price));text('source','Fuente: '+source);text('reason','Precio conectado; esperando al menos 35 velas históricas.');return}
+  const vals=candles.map(c=>c.c),e9=ema(vals,9),e21=ema(vals,21),rr=rsi(vals),vw=vwap(candles),at=atr(candles),mc=macdHistogram(vals);
+  const c1=candles[candles.length-1],c5=candles5[candles5.length-1],c15=candles15[candles15.length-1];
+  const p1=c1?.o?((price-c1.o)/c1.o)*100:0,p5=c5?.o?((price-c5.o)/c5.o)*100:0,p15=c15?.o?((price-c15.o)/c15.o)*100:0;
+  const micro=prices.length>10?((price-prices[Math.max(0,prices.length-10)].p)/prices[Math.max(0,prices.length-10)].p)*100:0;
+  const imb=orderPressure(),flow=flowPressure();
+  const factors=[
+    ['Tendencia EMA',e9>e21?1:-1],['RSI',rr>55?1:rr<45?-1:0],['VWAP',price>vw?1:-1],
+    ['MACD',mc>0?1:mc<0?-1:0],['Impulso 1m',p1>.025?1:p1<-.025?-1:0],
+    ['Tendencia 5m',p5>.06?1:p5<-.06?-1:0],['Libro',imb>.08?1:imb<-.08?-1:0],
+    ['Flujo agresivo',flow.v>.12?1:flow.v<-.12?-1:0],['Cambio vivo',micro>.02?1:micro<-.02?-1:0]
+  ];
+  const raw=factors.reduce((s,x)=>s+x[1],0);
+  const weakening=(signal==='UP'&&(micro<-.018||p1<-.035||imb<-.18||flow.v<-.25||price<e9))||
+                  (signal==='DOWN'&&(micro>.018||p1>.035||imb>.18||flow.v>.25||price>e9));
+  let next='WAIT',why='Señales mixtas: esperar confirmación.';
+  if(weakening){next='WAIT';why='La dirección anterior está perdiendo fuerza. Esperar antes de entrar.'}
+  else if(raw>=4){next='UP';why='Presión compradora y tendencia alineadas.'}
+  else if(raw<=-4){next='DOWN';why='Presión vendedora y tendencia alineadas.'}
+  else if(Math.abs(raw)>=3){why='Movimiento inicial detectado, pero falta confirmación.'}
+  if(next!==signal){signal=next;logSignal(next,why)}
+  text('signal',next==='UP'?'🟢 SUBE':next==='DOWN'?'🔴 BAJA':'🟡 ESPERAR');
+  $('signal').className='signal '+(next==='UP'?'green':next==='DOWN'?'red':'yellow');
+  $('hero').style.borderColor=next==='UP'?'var(--green)':next==='DOWN'?'var(--red)':'var(--yellow)';
+  text('reason',why);const score=Math.round(raw/9*100),conf=Math.round(Math.abs(raw)/9*100);
+  text('score',(score>0?'+':'')+score);text('confidence',conf+'%');$('confidenceBar').style.width=conf+'%';
+  $('confidenceBar').style.background=next==='UP'?'var(--green)':next==='DOWN'?'var(--red)':'var(--yellow)';
+  text('price','$'+fmt(price));text('source','Fuente: '+source);text('lastUpdate','Actualizado '+new Date().toLocaleTimeString());
+  text('change15',(p15>=0?'+':'')+p15.toFixed(3)+'%');text('ema',fmt(e9)+' / '+fmt(e21));text('rsi',rr.toFixed(1));text('vwap',fmt(vw));
+  text('macd',Number.isFinite(mc)?mc.toFixed(2):'—');text('atr',fmt(at));text('micro',(micro>=0?'+':'')+micro.toFixed(3)+'%');
+  text('imbalance',(imb*100).toFixed(1)+'% '+(imb>.08?'COMPRADORES':imb<-.08?'VENDEDORES':'NEUTRO'));
+  $('bookBar').style.width=Math.max(0,Math.min(100,50+imb*50))+'%';$('bookBar').style.background=imb>=0?'var(--green)':'var(--red)';
+  text('flow',(flow.v*100).toFixed(1)+'% '+(flow.v>.12?'COMPRA':flow.v<-.12?'VENTA':'MIXTO'));
+  text('whales',flow.large+' grandes / '+flow.n+' trades');text('ob',detectOB());
+  text('candleTime','Vela 1m '+(c1.closed?'cerrada':'en formación'));
+  text('distance',strike?(price-strike>=0?'+':'')+fmt(price-strike):'No configurado');
+  let risk=Number.isFinite(at)?max(at,price*.0009):price*.001;
+  text('entry','$'+fmt(price));text('stop','$'+fmt(next==='DOWN'?price+risk:price-risk));
+  text('target','$'+fmt(next==='DOWN'?price-risk*1.5:price+risk*1.5));text('risk','$'+fmt(risk));
+  $('factors').innerHTML=factors.map(([n,v])=>`<div class="meter"><span>${n}</span><b class="${v>0?'good':v<0?'bad':'warn'}">${v>0?'ALCISTA':v<0?'BAJISTA':'NEUTRO'}</b></div>`).join('');
+  draw();
+}
+function clock(){let now=new Date(),sec=now.getUTCMinutes()*60+now.getUTCSeconds(),left=900-sec%900;text('countdown',Math.floor(left/60)+':'+String(left%60).padStart(2,'0'));if(strike&&price)text('distance',(price-strike>=0?'+':'')+fmt(price-strike))}
+$('saveStrike').onclick=()=>{strike=+$('strike').value||0;try{localStorage.setItem('btc15_v6_strike',String(strike))}catch(e){}update()};
+try{$('strike').value=localStorage.getItem('btc15_v6_strike')||''}catch(e){}strike=+$('strike').value||0;
+$('clearLog').onclick=()=>$('log').innerHTML='<div class="muted">Historial borrado.</div>';
+setInterval(()=>{if(price){prices.push({p:price,t:Date.now()});if(prices.length>500)prices.shift()}update()},UPDATE_MS);
+setInterval(clock,250);setInterval(coinbaseFallback,4000);
+setInterval(()=>{if(Date.now()-lastTick>STALE_MS){setConnection('DATOS VENCIDOS','var(--red)');text('signal','🟡 ESPERAR');$('signal').className='signal yellow';text('reason','Sin datos recientes: no operar.');if(Date.now()-lastHistoryLoad>20000)bootstrap()}},3000);
+bootstrap();connectWS();
+})();
+</script>
+</body>
+</html>
